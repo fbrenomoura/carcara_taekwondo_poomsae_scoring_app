@@ -1,0 +1,27 @@
+name: Deploy to GitHub Pages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Upload do arquivo HTML
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./
+          
+      - name: Deploy no GitHub Pages
+        uses: actions/deploy-pages@v4
