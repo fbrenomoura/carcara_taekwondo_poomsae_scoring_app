@@ -13,7 +13,8 @@
             -webkit-user-select: none;
             touch-action: manipulation;
             font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at 50% 0%, #1a1d2e 0%, #050505 100%);
+            /* Fundo ainda mais claro conforme solicitado */
+            background: radial-gradient(circle at 50% 0%, #32394e 0%, #12141d 100%);
         }
         
         @media screen and (orientation: portrait) {
@@ -23,28 +24,28 @@
 
         /* Glassmorphism Refinado */
         .glass-heavy {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.4);
         }
 
         .glass-btn {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.2s ease;
         }
 
-        /* Tipografia Reta */
+        /* Tipografia */
         .score-font {
             font-family: 'Montserrat', sans-serif;
             letter-spacing: -0.02em;
             font-style: normal;
         }
 
-        /* Glare Suavizado */
+        /* Glare */
         .glow-red { text-shadow: 0 0 12px rgba(239, 68, 68, 0.4); }
         .glow-blue { text-shadow: 0 0 12px rgba(59, 130, 246, 0.4); }
         .glow-yellow { text-shadow: 0 0 25px rgba(250, 204, 21, 0.5); }
@@ -138,7 +139,7 @@
             
             <!-- Dedução -0.3 -->
             <div class="flex flex-col items-center gap-2">
-                <button onclick="changeAcc(3)" class="w-20 py-1 glass-btn rounded-md text-[8px] font-black uppercase text-green-400">Corr.</button>
+                <button onclick="changeAcc(3)" class="w-24 py-1 glass-btn rounded-md text-[8px] font-black uppercase text-green-400">Correção</button>
                 <button onclick="changeAcc(-3)" class="btn-precision w-28 h-28 rounded-[1.5rem] bg-gradient-to-br from-red-600 to-red-900 flex flex-col items-center justify-center border-t border-red-400 shadow-[0_10px_30px_rgba(220,38,38,0.4)]">
                     <span class="text-4xl font-black score-font">-0.3</span>
                     <span class="text-[8px] font-bold uppercase tracking-widest opacity-60">Dedução</span>
@@ -146,7 +147,7 @@
             </div>
 
             <!-- AJUSTES DE APRESENTAÇÃO -->
-            <section class="flex-1 glass-heavy rounded-[2rem] p-4 flex flex-col justify-center gap-2 max-w-sm border-white/10">
+            <section class="flex-1 glass-heavy rounded-[2rem] p-4 flex flex-col justify-center gap-2 max-w-sm border-white/5">
                 <!-- Velocidade -->
                 <div class="flex items-center justify-between gap-2 px-1">
                     <span class="text-[9px] font-black text-gray-400 uppercase w-28 leading-none text-left">Veloc. & Força</span>
@@ -180,8 +181,8 @@
 
             <!-- Dedução -0.1 -->
             <div class="flex flex-col items-center gap-2">
-                <button onclick="changeAcc(1)" class="w-20 py-1 glass-btn rounded-md text-[8px] font-black uppercase text-green-400">Corr.</button>
-                <button onclick="changeAcc(-1)" class="btn-precision w-28 h-28 rounded-[1.5rem] bg-gradient-to-br from-red-500 to-red-800 flex flex-col items-center justify-center border-t border-red-300 shadow-[0_10px_30px_rgba(220,38,38,0.4)]">
+                <button onclick="changeAcc(1)" class="w-24 py-1 glass-btn rounded-md text-[8px] font-black uppercase text-green-400">Correção</button>
+                <button onclick="changeAcc(-1)" class="btn-precision w-28 h-28 rounded-[1.5rem] bg-gradient-to-br from-red-400 to-red-700 flex flex-col items-center justify-center border-t border-red-300 shadow-[0_10px_30px_rgba(239,68,68,0.3)]">
                     <span class="text-4xl font-black score-font">-0.1</span>
                     <span class="text-[8px] font-bold uppercase tracking-widest opacity-60">Dedução</span>
                 </button>
