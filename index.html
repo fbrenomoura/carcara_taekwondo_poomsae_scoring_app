@@ -13,7 +13,6 @@
             -webkit-user-select: none;
             touch-action: manipulation;
             font-family: 'Inter', sans-serif;
-            /* Fundo ainda mais claro conforme solicitado */
             background: radial-gradient(circle at 50% 0%, #32394e 0%, #12141d 100%);
         }
         
@@ -22,19 +21,19 @@
             #app-container { display: none; }
         }
 
-        /* Glassmorphism Refinado */
+        /* Glassmorphism Refinado - Flare reduzido */
         .glass-heavy {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.4);
         }
 
         .glass-btn {
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             transition: all 0.2s ease;
         }
 
@@ -60,7 +59,7 @@
         }
 
         /* Modal Customizado */
-        #custom-modal {
+        .custom-modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
@@ -74,28 +73,42 @@
 </head>
 <body class="text-white h-screen w-screen overflow-hidden flex flex-col">
 
-    <!-- Modal de Confirmação Personalizado -->
-    <div id="custom-modal">
-        <div class="glass-heavy p-8 rounded-[2.5rem] max-w-sm w-full text-center border-white/20">
+    <!-- Modal de Confirmação -->
+    <div id="reset-modal" class="custom-modal-overlay">
+        <div class="glass-heavy p-8 rounded-[2.5rem] max-w-sm w-full text-center border-white/10">
             <h3 class="text-xl font-black uppercase tracking-widest mb-4">Recomeçar?</h3>
             <p class="text-gray-400 text-sm mb-8">Todas as pontuações atuais serão perdidas.</p>
             <div class="flex gap-4">
-                <button onclick="closeModal()" class="flex-1 py-3 glass-btn rounded-xl font-bold uppercase text-xs tracking-widest">Cancelar</button>
+                <button onclick="closeModal('reset-modal')" class="flex-1 py-3 glass-btn rounded-xl font-bold uppercase text-xs tracking-widest">Cancelar</button>
                 <button onclick="confirmReset()" class="flex-1 py-3 bg-red-600 rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-red-500">Recomeçar</button>
             </div>
         </div>
     </div>
 
+    <!-- Modal iOS Tela Cheia -->
+    <div id="ios-modal" class="custom-modal-overlay">
+        <div class="glass-heavy p-8 rounded-[2.5rem] max-w-sm w-full text-center border-white/10">
+            <div class="flex justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-black uppercase tracking-widest mb-4">Modo App</h3>
+            <p class="text-gray-400 text-sm mb-6 leading-relaxed">Para usar em tela cheia no iPhone/iPad:<br><br>1. Toque no ícone <strong>Compartilhar</strong> <br>2. Selecione <strong>"Adicionar à Tela de Início"</strong>.</p>
+            <button onclick="closeModal('ios-modal')" class="w-full py-3 bg-blue-600 rounded-xl font-bold uppercase text-xs tracking-widest">Entendido</button>
+        </div>
+    </div>
+
     <!-- Aviso de Orientação -->
     <div id="orientation-warning" class="fixed inset-0 bg-black z-50 flex-col items-center justify-center text-center p-6 hidden">
-        <h2 class="text-3xl font-black uppercase tracking-tighter text-yellow-500">Rode o Dispositivo</h2>
+        <h2 class="text-3xl font-black uppercase tracking-tighter text-yellow-500">Gire o Dispositivo</h2>
         <p class="text-gray-400 mt-2">A interface requer modo horizontal para operação.</p>
     </div>
 
     <!-- BARRA SUPERIOR -->
     <nav class="h-12 w-full glass-heavy flex items-center justify-between px-8 z-30 border-t-0 border-x-0 rounded-none">
         <div class="flex items-center gap-4">
-            <button onclick="toggleFullScreen()" class="glass-btn px-4 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-white/10 active:scale-95 transition-all">
+            <button onclick="handleFullScreen()" class="glass-btn px-4 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-white/10 active:scale-95 transition-all">
                 Tela Cheia
             </button>
         </div>
@@ -105,7 +118,7 @@
             <h1 class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300">Carcara Poomsae Scoring System</h1>
         </div>
 
-        <button onclick="openModal()" class="glass-btn px-4 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-red-500 border-red-500/20 hover:bg-red-500/10 active:scale-95 transition-all">
+        <button onclick="openModal('reset-modal')" class="glass-btn px-4 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-red-500 border-red-500/20 hover:bg-red-500/10 active:scale-95 transition-all">
             Recomeçar
         </button>
     </nav>
@@ -146,7 +159,7 @@
                 </button>
             </div>
 
-            <!-- AJUSTES DE APRESENTAÇÃO -->
+            <!-- AJUSTES DE APRESENTAÇÃO (Flare reduzido via border-white/5) -->
             <section class="flex-1 glass-heavy rounded-[2rem] p-4 flex flex-col justify-center gap-2 max-w-sm border-white/5">
                 <!-- Velocidade -->
                 <div class="flex items-center justify-between gap-2 px-1">
@@ -231,21 +244,37 @@
             if (navigator.vibrate) navigator.vibrate(30);
         }
 
-        function openModal() {
-            document.getElementById('custom-modal').style.display = 'flex';
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
         }
 
-        function closeModal() {
-            document.getElementById('custom-modal').style.display = 'none';
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
         }
 
         function confirmReset() {
             scores = { acc: 40, speed: 20, rhythm: 20, energy: 20 };
             updateDisplay();
-            closeModal();
+            closeModal('reset-modal');
         }
 
-        function toggleFullScreen() {
+        function isIOS() {
+            return [
+                'iPad Simulator',
+                'iPhone Simulator',
+                'iPad',
+                'iPhone',
+                'iPod'
+            ].includes(navigator.platform)
+            || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+        }
+
+        function handleFullScreen() {
+            if (isIOS()) {
+                openModal('ios-modal');
+                return;
+            }
+
             const doc = window.document;
             const docEl = doc.documentElement;
             if (!doc.fullscreenElement && !doc.webkitFullscreenElement) {
