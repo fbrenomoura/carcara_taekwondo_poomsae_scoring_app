@@ -92,98 +92,98 @@
     </div>
 
     <!-- BARRA SUPERIOR -->
-    <nav class="h-14 w-full glass-heavy flex items-center justify-between px-8 z-30 border-t-0 border-x-0 rounded-none">
+    <nav class="h-12 w-full glass-heavy flex items-center justify-between px-8 z-30 border-t-0 border-x-0 rounded-none">
         <div class="flex items-center gap-4">
-            <button onclick="toggleFullScreen()" class="glass-btn px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 active:scale-95 transition-all">
+            <button onclick="toggleFullScreen()" class="glass-btn px-4 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-white/10 active:scale-95 transition-all">
                 Tela Cheia
             </button>
         </div>
         
         <div class="flex items-center gap-3">
-            <div class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></div>
-            <h1 class="text-xs font-black uppercase tracking-[0.4em] text-gray-300">Carcara Poomsae Scoring System</h1>
+            <div class="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></div>
+            <h1 class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300">Carcara Poomsae Scoring System</h1>
         </div>
 
-        <button onclick="openModal()" class="glass-btn px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-red-500 border-red-500/20 hover:bg-red-500/10 active:scale-95 transition-all">
+        <button onclick="openModal()" class="glass-btn px-4 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-red-500 border-red-500/20 hover:bg-red-500/10 active:scale-95 transition-all">
             Recomeçar
         </button>
     </nav>
 
-    <div id="app-container" class="flex-1 flex flex-col relative">
+    <div id="app-container" class="flex-1 flex flex-col relative overflow-hidden">
         
         <!-- SCOREBOARD PRINCIPAL -->
-        <div class="flex-1 flex justify-between items-center px-16 relative z-10">
+        <div class="flex-1 flex justify-between items-center px-12 relative z-10 max-h-[55%]">
             
-            <!-- Precisão (Fonte reduzida) -->
+            <!-- Precisão -->
             <div class="flex flex-col items-start w-1/4">
-                <span class="text-[10px] font-black text-red-500 uppercase tracking-[0.3em] mb-1">Precisão</span>
-                <span id="val-acc-display" class="text-[6.5rem] font-black text-red-500 score-font glow-red leading-[0.8]">4.0</span>
+                <span class="text-[9px] font-black text-red-500 uppercase tracking-[0.2em] mb-0.5">Precisão</span>
+                <span id="val-acc-display" class="text-[5rem] font-black text-red-500 score-font glow-red leading-none">4.0</span>
             </div>
 
-            <!-- Pontuação Final (Caixa mais compacta, número maior, 1 casa decimal) -->
-            <div class="flex flex-col items-center glass-heavy px-10 py-4 rounded-[3.5rem] border-b-4 border-yellow-500/60 shadow-[0_0_50px_rgba(0,0,0,0.6)]">
-                <span class="text-[11px] uppercase tracking-[0.6em] text-gray-300 font-black mb-0">PONTUAÇÃO FINAL</span>
-                <span id="val-total" class="text-[9rem] font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter">10.0</span>
+            <!-- Pontuação Final -->
+            <div class="flex flex-col items-center glass-heavy px-8 py-3 rounded-[2.5rem] border-b-2 border-yellow-500/60 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+                <span class="text-[10px] uppercase tracking-[0.5em] text-gray-400 font-black mb-0">PONTUAÇÃO FINAL</span>
+                <span id="val-total" class="text-[7rem] font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter">10.0</span>
             </div>
 
-            <!-- Apresentação (Fonte reduzida) -->
+            <!-- Apresentação -->
             <div class="flex flex-col items-end text-right w-1/4">
-                <span class="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] mb-1">Apresentação</span>
-                <span id="val-pres-display" class="text-[6.5rem] font-black text-blue-400 score-font glow-blue leading-[0.8]">6.0</span>
+                <span class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] mb-0.5">Apresentação</span>
+                <span id="val-pres-display" class="text-[5rem] font-black text-blue-400 score-font glow-blue leading-none">6.0</span>
             </div>
         </div>
 
         <!-- PAINEL DE CONTROLOS INFERIOR -->
-        <div class="h-[35%] flex items-center justify-between px-8 pb-6 gap-6 z-20">
+        <div class="flex-1 flex items-center justify-between px-6 pb-4 gap-4 z-20 max-h-[45%] mt-auto">
             
             <!-- Dedução -0.3 -->
-            <div class="flex flex-col items-center gap-3">
-                <button onclick="changeAcc(3)" class="w-24 py-1.5 glass-btn rounded-lg text-[8px] font-black uppercase text-green-400">Correção</button>
-                <button onclick="changeAcc(-3)" class="btn-precision w-36 h-36 rounded-[2.5rem] bg-gradient-to-br from-red-600 to-red-900 flex flex-col items-center justify-center border-t border-red-400 shadow-[0_15px_40px_rgba(220,38,38,0.4)]">
-                    <span class="text-6xl font-black score-font">-0.3</span>
-                    <span class="text-[9px] font-bold uppercase tracking-widest opacity-60">Dedução</span>
+            <div class="flex flex-col items-center gap-2">
+                <button onclick="changeAcc(3)" class="w-20 py-1 glass-btn rounded-md text-[8px] font-black uppercase text-green-400">Corr.</button>
+                <button onclick="changeAcc(-3)" class="btn-precision w-28 h-28 rounded-[1.5rem] bg-gradient-to-br from-red-600 to-red-900 flex flex-col items-center justify-center border-t border-red-400 shadow-[0_10px_30px_rgba(220,38,38,0.4)]">
+                    <span class="text-4xl font-black score-font">-0.3</span>
+                    <span class="text-[8px] font-bold uppercase tracking-widest opacity-60">Dedução</span>
                 </button>
             </div>
 
             <!-- AJUSTES DE APRESENTAÇÃO -->
-            <section class="flex-1 glass-heavy rounded-[2.5rem] p-5 flex flex-col justify-center gap-3 max-w-lg border-white/15">
+            <section class="flex-1 glass-heavy rounded-[2rem] p-4 flex flex-col justify-center gap-2 max-w-sm border-white/10">
                 <!-- Velocidade -->
-                <div class="flex items-center justify-between gap-4 px-2">
-                    <span class="text-[10px] font-black text-gray-400 uppercase w-32 leading-none text-left">Velocidade & Força</span>
+                <div class="flex items-center justify-between gap-2 px-1">
+                    <span class="text-[9px] font-black text-gray-400 uppercase w-28 leading-none text-left">Veloc. & Força</span>
                     <div class="flex items-center gap-2 flex-1">
-                        <button onclick="changePres('speed', -1)" class="w-14 h-10 glass-btn rounded-xl flex items-center justify-center font-black text-xl hover:bg-white/10 active:bg-blue-500/20">-</button>
-                        <span id="val-speed" class="flex-1 text-center text-xl font-black text-blue-300 score-font">2.0</span>
-                        <button onclick="changePres('speed', 1)" class="w-14 h-10 glass-btn rounded-xl flex items-center justify-center font-black text-xl hover:bg-white/10 active:bg-blue-500/20">+</button>
+                        <button onclick="changePres('speed', -1)" class="w-10 h-8 glass-btn rounded-lg flex items-center justify-center font-black text-lg">-</button>
+                        <span id="val-speed" class="flex-1 text-center text-lg font-black text-blue-300 score-font">2.0</span>
+                        <button onclick="changePres('speed', 1)" class="w-10 h-8 glass-btn rounded-lg flex items-center justify-center font-black text-lg">+</button>
                     </div>
                 </div>
 
                 <!-- Ritmo -->
-                <div class="flex items-center justify-between gap-4 px-2">
-                    <span class="text-[10px] font-black text-gray-400 uppercase w-32 leading-none text-left">Ritmo & Tempo</span>
+                <div class="flex items-center justify-between gap-2 px-1">
+                    <span class="text-[9px] font-black text-gray-400 uppercase w-28 leading-none text-left">Ritmo & Tempo</span>
                     <div class="flex items-center gap-2 flex-1">
-                        <button onclick="changePres('rhythm', -1)" class="w-14 h-10 glass-btn rounded-xl flex items-center justify-center font-black text-xl hover:bg-white/10 active:bg-blue-500/20">-</button>
-                        <span id="val-rhythm" class="flex-1 text-center text-xl font-black text-blue-300 score-font">2.0</span>
-                        <button onclick="changePres('rhythm', 1)" class="w-14 h-10 glass-btn rounded-xl flex items-center justify-center font-black text-xl hover:bg-white/10 active:bg-blue-500/20">+</button>
+                        <button onclick="changePres('rhythm', -1)" class="w-10 h-8 glass-btn rounded-lg flex items-center justify-center font-black text-lg">-</button>
+                        <span id="val-rhythm" class="flex-1 text-center text-lg font-black text-blue-300 score-font">2.0</span>
+                        <button onclick="changePres('rhythm', 1)" class="w-10 h-8 glass-btn rounded-lg flex items-center justify-center font-black text-lg">+</button>
                     </div>
                 </div>
 
                 <!-- Energia -->
-                <div class="flex items-center justify-between gap-4 px-2">
-                    <span class="text-[10px] font-black text-gray-400 uppercase w-32 leading-none text-left">Expressão de Energia</span>
+                <div class="flex items-center justify-between gap-2 px-1">
+                    <span class="text-[9px] font-black text-gray-400 uppercase w-28 leading-none text-left">Expr. Energia</span>
                     <div class="flex items-center gap-2 flex-1">
-                        <button onclick="changePres('energy', -1)" class="w-14 h-10 glass-btn rounded-xl flex items-center justify-center font-black text-xl hover:bg-white/10 active:bg-blue-500/20">-</button>
-                        <span id="val-energy" class="flex-1 text-center text-xl font-black text-blue-300 score-font">2.0</span>
-                        <button onclick="changePres('energy', 1)" class="w-14 h-10 glass-btn rounded-xl flex items-center justify-center font-black text-xl hover:bg-white/10 active:bg-blue-500/20">+</button>
+                        <button onclick="changePres('energy', -1)" class="w-10 h-8 glass-btn rounded-lg flex items-center justify-center font-black text-lg">-</button>
+                        <span id="val-energy" class="flex-1 text-center text-lg font-black text-blue-300 score-font">2.0</span>
+                        <button onclick="changePres('energy', 1)" class="w-10 h-8 glass-btn rounded-lg flex items-center justify-center font-black text-lg">+</button>
                     </div>
                 </div>
             </section>
 
             <!-- Dedução -0.1 -->
-            <div class="flex flex-col items-center gap-3">
-                <button onclick="changeAcc(1)" class="w-24 py-1.5 glass-btn rounded-lg text-[8px] font-black uppercase text-green-400">Correção</button>
-                <button onclick="changeAcc(-1)" class="btn-precision w-36 h-36 rounded-[2.5rem] bg-gradient-to-br from-red-500 to-red-800 flex flex-col items-center justify-center border-t border-red-300 shadow-[0_15px_40px_rgba(220,38,38,0.4)]">
-                    <span class="text-6xl font-black score-font">-0.1</span>
-                    <span class="text-[9px] font-bold uppercase tracking-widest opacity-60">Dedução</span>
+            <div class="flex flex-col items-center gap-2">
+                <button onclick="changeAcc(1)" class="w-20 py-1 glass-btn rounded-md text-[8px] font-black uppercase text-green-400">Corr.</button>
+                <button onclick="changeAcc(-1)" class="btn-precision w-28 h-28 rounded-[1.5rem] bg-gradient-to-br from-red-500 to-red-800 flex flex-col items-center justify-center border-t border-red-300 shadow-[0_10px_30px_rgba(220,38,38,0.4)]">
+                    <span class="text-4xl font-black score-font">-0.1</span>
+                    <span class="text-[8px] font-bold uppercase tracking-widest opacity-60">Dedução</span>
                 </button>
             </div>
 
@@ -207,8 +207,6 @@
 
             document.getElementById('val-acc-display').innerText = (scores.acc / 10).toFixed(1);
             document.getElementById('val-pres-display').innerText = (presTotal / 10).toFixed(1);
-            
-            // Pontuação Final com 1 casa decimal conforme pedido
             document.getElementById('val-total').innerText = (finalTotal / 10).toFixed(1);
             
             document.getElementById('val-speed').innerText = (scores.speed / 10).toFixed(1);
