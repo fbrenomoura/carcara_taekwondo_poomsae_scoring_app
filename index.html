@@ -1,1 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Carcara Poomsae Scoring System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Inter:wght@400;600;800&display=swap');
 
+        body {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 50% 0%, #1a1d2e 0%, #050505 100%);
+        }
+        
+        @media screen and (orientation: portrait) {
+            #orientation-warning { display: flex; }
+            #app-container { display: none; }
+        }
+
+        /* Glassmorphism Refinado */
+        .glass-heavy {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.2s ease;
+        }
+
+        /* Tipografia Reta */
+        .score-font {
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: -0.02em;
+            font-style: normal;
+        }
+
+        /* Glare Suavizado */
+        .glow-red { text-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
+        .glow-blue { text-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+        .glow-yellow { text-shadow: 0 0 25px rgba(250, 204, 21, 0.5); }
+
+        .btn-precision {
+            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-precision:active {
+            transform: scale(0.94) translateY(2px);
+            filter: brightness(1.3);
+        }
+    </style>
+</head>
+<body class="text-white h-screen w-screen overflow-hidden flex flex-col">
+
+    <!-- Aviso de Orientação -->
+    <div id="orientation-warning" class="fixed inset-0 bg-black z-50 flex-col items-center justify-center text-center p-6 hidden">
+        <h2 class="text-3xl font-black uppercase tracking-tighter text-yellow-500">Rode o Dispositivo</h2>
+        <p class="text-gray-400 mt-2">A interface requer modo horizontal para operação.</p>
+    </div>
+
+    <!-- BARRA SUPERIOR -->
+    <nav class="h-14 w-full glass-heavy flex items-center justify-between px-8 z-30 border-t-0 border-x-0 rounded-none">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleFullScreen()" class="glass-btn px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 active:scale-95 transition-all">
+                Fullscreen
+            </button>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <div class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></div>
+            <h1 class="text-xs font-black uppercase tracking-[0.4em] text-gray-300">Carcara Poomsae Scoring System</h1>
+        </div>
+
+        <button onclick="resetScores()" class="glass-btn px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-red-500 border-red-500/20 hover:bg-red-500/10 active:scale-95 transition-all">
+            Reset System
+        </button>
+    </nav>
+
+    <div id="app-container" class="flex-1 flex flex-col relative">
+        
+        <!-- SCOREBOARD PRINCIPAL -->
+        <div class="flex-1 flex justify-between items-center px-16 relative z-10">
+            
+            <!-- Precisão -->
+            <div class="flex flex-col items-start w-1/4">
+                <span class="text-[11px] font-black text-red-500 uppercase tracking-[0.3em] mb-1">Precisão</span>
+                <span id="val-acc-display" class="text-[10rem] font-black text-red-500 score-font glow-red leading-[0.8]">4.0</span>
+            </div>
+
+            <!-- Pontuação Final (Centralizada e Maior) -->
+            <div class="flex flex-col items-center glass-heavy px-14 py-8 rounded-[4rem] border-b-4 border-yellow-500/60 shadow-[0_0_50px_rgba(0,0,0,0.6)]">
+                <span class="text-[12px] uppercase tracking-[0.6em] text-gray-300 font-black mb-1">PONTUAÇÃO FINAL</span>
+                <span id="val-total" class="text-8xl font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter">10.00</span>
+            </div>
+
+            <!-- Apresentação (Uma casa decimal conforme solicitado) -->
+            <div class="flex flex-col items-end text-right w-1/4">
+                <span class="text-[11px] font-black text-blue-400 uppercase tracking-[0.3em] mb-1">Apresentação</span>
+                <span id="val-pres-display" class="text-[10rem] font-black text-blue-400 score-font glow-blue leading-[0.8]">6.0</span>
+            </div>
+        </div>
+
+        <!-- PAINEL DE CONTROLOS INFERIOR -->
+        <div class="h-[35%] flex items-center justify-between px-8 pb-6 gap-6 z-20">
+            
+            <!-- Dedução -0.3 -->
+            <div class="flex flex-col items-center gap-3">
+                <button onclick="changeAcc(3)" class="w-24 py-1.5 glass-btn rounded-lg text-[8px] font-black uppercase text-green-400">Correção</button>
+                <button onclick="changeAcc(-3)" class="btn-precision w-36 h-36 rounded-[2.5rem] bg-gradient-to-br from-red-600 to-red-900 flex flex-col items-center justify-center border-t border-red-400 shadow-[0_15px_40px_rgba(220,38,38,0.4)]">
+                    <span class="text-6xl font-black score-font">-0.3</span>
+                    <span class="text-[9px] font-bold uppercase tracking-widest opacity-60">Dedução</span>
+                </button>
+            </div>
+
+            <!-- AJUSTES DE APRESENTAÇÃO (Ancorado no Centro-Baixo) -->
+            <section class="flex-1 glass-heavy rounded-[2.5rem] p-5 flex flex-col justify-center gap-3 max-w-lg border-white/15">
+                <!-- Velocidade -->
+                <div class="flex items-center justify-between gap-4 px-2">
+                    <span class="text-[10px] font-black text-gray-400 uppercase w-28 leading-none">Velocidade & Força</span>
+                    <div class="flex items-center gap-2 flex-1">
+                        <button onclick="changePres('speed', -1)" class="w-14 h-10 glass-btn rounded-xl flex items-center justify-center font-black text-xl hover:bg-white/10 active:bg-blue-500/20">-</button>
+                        <span id="val-speed" class="flex-1 text-center text-xl font-black text-blue-300 score-font">2.0</span>
+                        <button onclick="changePres('speed', 1)" class="w-14 h-10 glass-btn rounded-xl flex items-center justify-center font-black text-xl hover:bg-white/10 active:bg-blue-500/20">+</button>
+                    </div>
+                </div>
+
+                <!-- Ritmo -->
+                <div class="flex items-center justify-between gap-4 px-2">
+                    <span class="text-[10px] font-black text-gray-400 uppercase w-28 leading-none">Ritmo & Tempo</span>
+                    <div class="flex items-center gap-2 flex-1">
+                        <button onclick="changePres('rhythm', -1)" class="w-14 h-10 glass-btn rounded-xl flex items-center justify-center font-black text-xl hover:bg-white/10 active:bg-blue-500/20">-</button>
+                        <span id="val-rhythm" class="flex-1 text-center text-xl font-black text-blue-300 score-font">2.0</span>
+                        <button onclick="changePres('rhythm', 1)" class="w-14 h-10 glass-btn rounded-xl flex items-center justify-center font-black text-xl hover:bg-white/10 active:bg-blue-500/20">+</button>
+                    </div>
+                </div>
+
+                <!-- Energia -->
+                <div class="flex items-center justify-between gap-4 px-2">
+                    <span class="text-[10px] font-black text-gray-400 uppercase w-28 leading-none">Expressão Energia</span>
+                    <div class="flex items-center gap-2 flex-1">
+                        <button onclick="changePres('energy', -1)" class="w-14 h-10 glass-btn rounded-xl flex items-center justify-center font-black text-xl hover:bg-white/10 active:bg-blue-500/20">-</button>
+                        <span id="val-energy" class="flex-1 text-center text-xl font-black text-blue-300 score-font">2.0</span>
+                        <button onclick="changePres('energy', 1)" class="w-14 h-10 glass-btn rounded-xl flex items-center justify-center font-black text-xl hover:bg-white/10 active:bg-blue-500/20">+</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dedução -0.1 -->
+            <div class="flex flex-col items-center gap-3">
+                <button onclick="changeAcc(1)" class="w-24 py-1.5 glass-btn rounded-lg text-[8px] font-black uppercase text-green-400">Correção</button>
+                <button onclick="changeAcc(-1)" class="btn-precision w-36 h-36 rounded-[2.5rem] bg-gradient-to-br from-red-500 to-red-800 flex flex-col items-center justify-center border-t border-red-300 shadow-[0_15px_40px_rgba(220,38,38,0.4)]">
+                    <span class="text-6xl font-black score-font">-0.1</span>
+                    <span class="text-[9px] font-bold uppercase tracking-widest opacity-60">Dedução</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const MAX_ACC = 40;
+        const MAX_SUB_PRES = 20;
+
+        let scores = {
+            acc: 40,
+            speed: 20,
+            rhythm: 20,
+            energy: 20
+        };
+
+        function updateDisplay() {
+            const presTotal = scores.speed + scores.rhythm + scores.energy;
+            const finalTotal = scores.acc + presTotal;
+
+            // Precisão (1 casa decimal)
+            document.getElementById('val-acc-display').innerText = (scores.acc / 10).toFixed(1);
+            
+            // Apresentação (Ajustado para 1 casa decimal conforme pedido)
+            document.getElementById('val-pres-display').innerText = (presTotal / 10).toFixed(1);
+            
+            // Pontuação Final (Mantido 2 casas para precisão total)
+            document.getElementById('val-total').innerText = (finalTotal / 10).toFixed(2);
+            
+            // Sub-scores
+            document.getElementById('val-speed').innerText = (scores.speed / 10).toFixed(1);
+            document.getElementById('val-rhythm').innerText = (scores.rhythm / 10).toFixed(1);
+            document.getElementById('val-energy').innerText = (scores.energy / 10).toFixed(1);
+        }
+
+        function changeAcc(amount) {
+            scores.acc += amount;
+            if (scores.acc > MAX_ACC) scores.acc = MAX_ACC;
+            if (scores.acc < 0) scores.acc = 0;
+            updateDisplay();
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        function changePres(criterion, amount) {
+            scores[criterion] += amount;
+            if (scores[criterion] > MAX_SUB_PRES) scores[criterion] = MAX_SUB_PRES;
+            if (scores[criterion] < 0) scores[criterion] = 0;
+            updateDisplay();
+            if (navigator.vibrate) navigator.vibrate(30);
+        }
+
+        function resetScores() {
+            if (confirm("Resetar pontuações do sistema?")) {
+                scores = { acc: 40, speed: 20, rhythm: 20, energy: 20 };
+                updateDisplay();
+            }
+        }
+
+        function toggleFullScreen() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+            if (!doc.fullscreenElement && !doc.webkitFullscreenElement) {
+                if (docEl.requestFullscreen) docEl.requestFullscreen();
+                else if (docEl.webkitRequestFullScreen) docEl.webkitRequestFullScreen();
+            } else {
+                if (doc.exitFullscreen) doc.exitFullscreen();
+                else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+            }
+        }
+
+        window.onload = updateDisplay;
+    </script>
+</body>
+</html>
