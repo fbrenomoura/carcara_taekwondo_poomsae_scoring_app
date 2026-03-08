@@ -45,8 +45,8 @@
         }
 
         /* Glare Suavizado */
-        .glow-red { text-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
-        .glow-blue { text-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+        .glow-red { text-shadow: 0 0 12px rgba(239, 68, 68, 0.4); }
+        .glow-blue { text-shadow: 0 0 12px rgba(59, 130, 246, 0.4); }
         .glow-yellow { text-shadow: 0 0 25px rgba(250, 204, 21, 0.5); }
 
         .btn-precision {
@@ -58,7 +58,7 @@
             filter: brightness(1.3);
         }
 
-        /* Modal Customizado para não quebrar o Fullscreen */
+        /* Modal Customizado */
         #custom-modal {
             display: none;
             position: fixed;
@@ -114,22 +114,22 @@
         <!-- SCOREBOARD PRINCIPAL -->
         <div class="flex-1 flex justify-between items-center px-16 relative z-10">
             
-            <!-- Precisão -->
+            <!-- Precisão (Fonte reduzida) -->
             <div class="flex flex-col items-start w-1/4">
-                <span class="text-[11px] font-black text-red-500 uppercase tracking-[0.3em] mb-1">Precisão</span>
-                <span id="val-acc-display" class="text-[8rem] font-black text-red-500 score-font glow-red leading-[0.8]">4.0</span>
+                <span class="text-[10px] font-black text-red-500 uppercase tracking-[0.3em] mb-1">Precisão</span>
+                <span id="val-acc-display" class="text-[6.5rem] font-black text-red-500 score-font glow-red leading-[0.8]">4.0</span>
             </div>
 
-            <!-- Pontuação Final -->
-            <div class="flex flex-col items-center glass-heavy px-14 py-8 rounded-[4rem] border-b-4 border-yellow-500/60 shadow-[0_0_50px_rgba(0,0,0,0.6)]">
-                <span class="text-[12px] uppercase tracking-[0.6em] text-gray-300 font-black mb-1">PONTUAÇÃO FINAL</span>
-                <span id="val-total" class="text-7xl font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter">10.00</span>
+            <!-- Pontuação Final (Caixa mais compacta, número maior, 1 casa decimal) -->
+            <div class="flex flex-col items-center glass-heavy px-10 py-4 rounded-[3.5rem] border-b-4 border-yellow-500/60 shadow-[0_0_50px_rgba(0,0,0,0.6)]">
+                <span class="text-[11px] uppercase tracking-[0.6em] text-gray-300 font-black mb-0">PONTUAÇÃO FINAL</span>
+                <span id="val-total" class="text-[9rem] font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter">10.0</span>
             </div>
 
-            <!-- Apresentação -->
+            <!-- Apresentação (Fonte reduzida) -->
             <div class="flex flex-col items-end text-right w-1/4">
-                <span class="text-[11px] font-black text-blue-400 uppercase tracking-[0.3em] mb-1">Apresentação</span>
-                <span id="val-pres-display" class="text-[8rem] font-black text-blue-400 score-font glow-blue leading-[0.8]">6.0</span>
+                <span class="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] mb-1">Apresentação</span>
+                <span id="val-pres-display" class="text-[6.5rem] font-black text-blue-400 score-font glow-blue leading-[0.8]">6.0</span>
             </div>
         </div>
 
@@ -207,7 +207,9 @@
 
             document.getElementById('val-acc-display').innerText = (scores.acc / 10).toFixed(1);
             document.getElementById('val-pres-display').innerText = (presTotal / 10).toFixed(1);
-            document.getElementById('val-total').innerText = (finalTotal / 10).toFixed(2);
+            
+            // Pontuação Final com 1 casa decimal conforme pedido
+            document.getElementById('val-total').innerText = (finalTotal / 10).toFixed(1);
             
             document.getElementById('val-speed').innerText = (scores.speed / 10).toFixed(1);
             document.getElementById('val-rhythm').innerText = (scores.rhythm / 10).toFixed(1);
@@ -230,7 +232,6 @@
             if (navigator.vibrate) navigator.vibrate(30);
         }
 
-        /* Funções de Modal para evitar perda de Fullscreen */
         function openModal() {
             document.getElementById('custom-modal').style.display = 'flex';
         }
