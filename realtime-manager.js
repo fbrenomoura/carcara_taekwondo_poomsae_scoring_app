@@ -68,7 +68,8 @@ export class RealtimeManager {
                 penalties: 0,
                 timerStart: null,
                 timerPausedAt: null,
-                consolidated: false
+                consolidated: false,
+                roundId: Date.now()
             },
             judges: initialJudges,
             updatedAt: Date.now()
@@ -281,6 +282,7 @@ export class RealtimeManager {
             "sharedState.timerStart": null,
             "sharedState.timerPausedAt": null,
             "sharedState.consolidated": false,
+            "sharedState.roundId": Date.now(),
             status: 'scoring'
         };
 
@@ -299,14 +301,14 @@ export class RealtimeManager {
         const activeScores = [];
         Object.keys(judgesData).forEach(key => {
             const j = judgesData[key];
-            if (j.scores) {
+            if (j.scores && j.scores.submitted) {
                 const accVal = j.scores.acc / 10;
                 const presVal = (j.scores.speed + j.scores.rhythm + j.scores.energy) / 10;
                 activeScores.push({ acc: accVal, pres: presVal });
             }
         });
 
-        if (activeScores.length === 0) return { acc: "0.00", pres: "0.00", total: "0.00" };
+        if (activeScores.length === 0) return { acc: "4.00", pres: "6.00", total: "10.00" };
 
         let accSum = 0;
         let presSum = 0;

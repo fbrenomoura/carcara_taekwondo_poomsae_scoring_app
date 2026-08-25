@@ -85,6 +85,18 @@
         </div>
     </div>
 
+    <!-- Modal Confirmação de Nova Rodada (Master) -->
+    <div id="reset-round-modal" class="custom-modal-overlay">
+        <div class="glass-heavy p-8 rounded-[2.5rem] max-w-sm w-full text-center border-white/10">
+            <h3 class="text-xl font-black uppercase tracking-widest mb-4 text-red-500">Nova Rodada</h3>
+            <p class="text-gray-400 text-sm mb-8">Deseja apagar as notas atuais e iniciar uma nova rodada?</p>
+            <div class="flex gap-4">
+                <button onclick="closeModal('reset-round-modal')" class="flex-1 py-3 glass-btn rounded-xl font-bold uppercase text-xs tracking-widest">Cancelar</button>
+                <button onclick="confirmResetRound()" class="flex-1 py-3 bg-red-600 rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-red-500">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal iOS Tela Cheia -->
     <div id="ios-modal" class="custom-modal-overlay">
         <div class="glass-heavy p-8 rounded-[2.5rem] max-w-sm w-full text-center border-white/10">
@@ -279,7 +291,7 @@
                     <span class="text-xl mb-1">✓</span>
                     <span class="text-[10px] font-black uppercase tracking-widest">Consolidar</span>
                 </button>
-                <button onclick="triggerMasterResetRound()" class="w-40 py-2 glass-btn rounded-xl text-[9px] font-black uppercase tracking-widest text-gray-300 hover:bg-white/10 active:scale-95">Nova Rodada</button>
+                <button onclick="openModal('reset-round-modal')" class="w-40 py-2 glass-btn rounded-xl text-[9px] font-black uppercase tracking-widest text-gray-300 hover:bg-white/10 active:scale-95">Nova Rodada</button>
             </div>
         </div>
 
@@ -348,15 +360,27 @@
 
     <!-- Módulo JS Realtime Firebase -->
     <script type="module">
-        import { realtimeManager } from './realtime-manager.js?v=5';
+        import { realtimeManager } from './realtime-manager.js?v=6';
 
         window.realtimeManager = realtimeManager;
         let selectedMasterJudges = 3;
+        let currentRoundId = null;
 
         // Callback de alteração de estado no Firestore
         realtimeManager.onStateChangeCallback = (data) => {
             const ind = document.getElementById('connection-indicator');
             if (ind) ind.className = "w-2 h-2 rounded-full bg-green-500 animate-pulse";
+
+            if (data.sharedState?.roundId !== currentRoundId) {
+                currentRoundId = data.sharedState?.roundId;
+                if (realtimeManager.role === 'judge' || realtimeManager.role === 'offline') {
+                    scores.acc = 40;
+                    scores.speed = 20;
+                    scores.rhythm = 20;
+                    scores.energy = 20;
+                    updateDisplay();
+                }
+            }
 
             // Se o master ou juiz estiver aguardando no Lobby, atualizar contagem/lista
             if (data.status === 'waiting' && realtimeManager.role === 'master') {
@@ -436,6 +460,14 @@
             document.getElementById('lobby-judges-list').innerHTML = html;
             openModal('waiting-lobby-overlay');
         }
+
+        // Correções de UI
+        if (typeof isIOS === 'function' && isIOS()) {
+            document.documentElement.style.height = '-webkit-fill-available';
+            document.body.style.height = '-webkit-fill-available';
+        }
+        
+        updateUIState('offline');
 
         window.masterForceStart = function() {
             closeModal('waiting-lobby-overlay');
@@ -757,7 +789,23 @@
             document.getElementById('val-energy').innerText = (scores.energy / 10).toFixed(1);
         }
 
+        function canScore() {
+            // Em modo offline, pode pontuar a qualquer momento
+            if (realtimeManager.role === 'offline' || !realtimeManager.role) return true;
+            
+            // Em modo juiz, verificar se o cronômetro já foi iniciado pelo menos uma vez
+            if (realtimeManager.role === 'judge') {
+                const started = realtimeManager.sessionData?.sharedState?.timerStart || realtimeManager.sessionData?.sharedState?.timerPausedAt;
+                if (!started) {
+                    alert("Aguarde a Mesa Central iniciar o tempo!");
+                    return false;
+                }
+            }
+            return true;
+        }
+
         function changeAcc(amount) {
+            if (!canScore()) return;
             scores.acc += amount;
             if (scores.acc > MAX_ACC) scores.acc = MAX_ACC;
             if (scores.acc < 0) scores.acc = 0;
@@ -766,6 +814,7 @@
         }
 
         function changePres(criterion, amount) {
+            if (!canScore()) return;
             scores[criterion] += amount;
             if (scores[criterion] > MAX_SUB_PRES) scores[criterion] = MAX_SUB_PRES;
             if (scores[criterion] < 0) scores[criterion] = 0;
@@ -782,9 +831,17 @@
         }
 
         function confirmReset() {
-            scores = { acc: 40, speed: 20, rhythm: 20, energy: 20 };
+            scores.acc = 40;
+            scores.speed = 20;
+            scores.rhythm = 20;
+            scores.energy = 20;
             updateDisplay();
             closeModal('reset-modal');
+        }
+        
+        window.confirmResetRound = async function() {
+            closeModal('reset-round-modal');
+            await realtimeManager.resetRound();
         }
 
         function isIOS() {
