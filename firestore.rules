@@ -1,0 +1,19 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Regra para sessões de arbitragem de Poomsae por código de 6 dígitos
+    match /poomsae-sessions/{sessionId} {
+      
+      // Permitir leitura pública (Master, Juízes e Telão/Espectadores)
+      allow read: if true;
+      
+      // Permitir criação e atualizações para dispositivos participando da arbitragem
+      allow create, update: if true;
+      
+      // Permitir deleção/limpeza da sessão (apenas se necessário pelo master)
+      allow delete: if true;
+    }
+  }
+}
