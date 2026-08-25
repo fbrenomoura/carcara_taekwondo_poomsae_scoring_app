@@ -214,7 +214,7 @@
         </div>
         
         <div class="flex items-center gap-3">
-            <div id="connection-indicator" class="w-2 h-2 rounded-full bg-gray-500"></div>
+            <div id="connection-indicator" class="hidden w-2 h-2 rounded-full bg-gray-500"></div>
             <!-- Finalizar Avaliação (Apenas Juiz) -->
             <button id="btn-finalizar" onclick="window.submitFinalJudgeScore()" class="hidden glass-btn px-4 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-green-400 border-green-500/30 hover:bg-green-500/10 active:scale-95 transition-all items-center gap-1.5">
                 <span>✓</span> Enviar Nota
@@ -362,7 +362,7 @@
 
     <!-- Módulo JS Realtime Firebase -->
     <script type="module">
-        import { realtimeManager } from './realtime-manager.js?v=8';
+        import { realtimeManager } from './realtime-manager.js?v=9';
 
         window.realtimeManager = realtimeManager;
         let selectedMasterJudges = 3;
@@ -736,7 +736,7 @@
                 spectatorPanel.classList.add('hidden');
                 document.getElementById('btn-finalizar').classList.add('hidden');
                 document.getElementById('btn-finalizar').classList.remove('flex');
-                document.getElementById('connection-indicator').className = "w-2 h-2 rounded-full bg-gray-500";
+                document.getElementById('connection-indicator').className = "hidden w-2 h-2 rounded-full bg-gray-500";
                 return;
             }
 
