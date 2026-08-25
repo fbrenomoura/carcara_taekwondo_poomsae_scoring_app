@@ -61,10 +61,9 @@ export class RealtimeManager {
             masterDeviceId: this.deviceId,
             masterLastSeen: Date.now(),
             sharedState: {
-                accDisplay: "4.0",
-                presDisplay: "6.0",
-                totalDisplay: "10.0",
-                roundActive: false,
+                accDisplay: "4.00",
+                presDisplay: "6.00",
+                totalDisplay: "10.00",
                 penalties: 0,
                 timerStart: null,
                 timerPausedAt: null,
@@ -72,6 +71,7 @@ export class RealtimeManager {
                 roundId: Date.now()
             },
             judges: initialJudges,
+            spectatorsCount: 0,
             updatedAt: Date.now()
         };
 
@@ -164,6 +164,16 @@ export class RealtimeManager {
         if (!snap.exists()) {
             throw new Error("Sessão não encontrada com este código.");
         }
+
+        const data = snap.data();
+        const currentSpecs = data.spectatorsCount || 0;
+        if (currentSpecs >= 3) {
+            throw new Error("Limite máximo de 3 telões conectados foi atingido.");
+        }
+
+        await updateDoc(sessionRef, {
+            spectatorsCount: currentSpecs + 1
+        });
 
         this.sessionCode = code;
         this.role = 'spectator';

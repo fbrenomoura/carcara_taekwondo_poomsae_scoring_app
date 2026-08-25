@@ -178,6 +178,18 @@
         </div>
     </div>
 
+    <!-- MODAL CONFIRMAÇÃO DE ENVIO DE NOTA (JUIZ) -->
+    <div id="confirm-send-modal" class="custom-modal-overlay">
+        <div class="glass-heavy p-8 rounded-[2.5rem] max-w-sm w-full text-center border-white/10">
+            <h3 class="text-xl font-black uppercase tracking-widest mb-2 text-yellow-400">Confirmar Envio</h3>
+            <p class="text-gray-300 text-xs mb-6 leading-relaxed">Deseja realmente enviar sua nota final? Ela não poderá ser alterada até a próxima rodada.</p>
+            <div class="flex gap-4">
+                <button onclick="closeModal('confirm-send-modal')" class="flex-1 py-3 glass-btn rounded-xl font-bold uppercase text-xs tracking-widest text-gray-400">Cancelar</button>
+                <button onclick="window.confirmSubmitFinalJudgeScore()" class="flex-1 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white font-black uppercase rounded-xl text-xs tracking-widest shadow-lg hover:brightness-110">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- TELA DE ESPERA / LOBBY (Aguardando Conexão dos Juízes) -->
     <div id="waiting-lobby-overlay" class="custom-modal-overlay" style="z-index: 90;">
         <div class="glass-heavy p-8 rounded-[2.5rem] max-w-lg w-full text-center border-white/10 flex flex-col items-center">
@@ -197,7 +209,12 @@
                     <span class="text-gray-400">Status das Vagas:</span>
                     <span id="lobby-connected-count" class="text-yellow-400 font-mono">0 / 3 Conectados</span>
                 </div>
-                <div id="lobby-judges-list" class="grid grid-cols-3 gap-2"></div>
+                <div id="lobby-judges-list" class="grid grid-cols-3 gap-2 mb-4"></div>
+
+                <div class="flex justify-between items-center text-xs font-bold uppercase mb-1 px-2 border-t border-white/10 pt-3">
+                    <span class="text-gray-400">Telões Conectados:</span>
+                    <span id="lobby-spectators-count" class="text-purple-400 font-mono">0 / 3 Telões</span>
+                </div>
             </div>
 
             <div class="flex gap-3 w-full">
@@ -373,7 +390,7 @@
 
     <!-- Módulo JS Realtime Firebase -->
     <script type="module">
-        import { realtimeManager } from './realtime-manager.js?v=13';
+        import { realtimeManager } from './realtime-manager.js?v=14';
 
         window.realtimeManager = realtimeManager;
         let selectedMasterJudges = 3;
@@ -412,7 +429,7 @@
 
             const penalties = data.sharedState?.penalties || 0;
             const pBadge = document.getElementById('penalties-badge');
-            if (penalties > 0) {
+            if (penalties > 0 && realtimeManager.role !== 'spectator') {
                 pBadge.innerText = `-${(penalties * 0.3).toFixed(1)} Gam-jeom`;
                 pBadge.classList.remove('hidden');
             } else {
@@ -479,6 +496,11 @@
 
             document.getElementById('lobby-connected-count').innerText = `${onlineCount} / ${numJudges} Conectados`;
             document.getElementById('lobby-judges-list').innerHTML = html;
+
+            const specCount = data.spectatorsCount || 0;
+            const specEl = document.getElementById('lobby-spectators-count');
+            if (specEl) specEl.innerText = `${specCount} / 3 Telões`;
+
             openModal('waiting-lobby-overlay');
         }
 
@@ -511,11 +533,17 @@
                 const hasSubmitted = j && j.scores && j.scores.submitted;
                 const statusBg = isOnline ? (hasSubmitted ? 'bg-green-500' : 'bg-yellow-500') : 'bg-red-500/50';
                 
+                let scoreText = '';
+                if (j && j.scores) {
+                    const val = ((j.scores.acc + j.scores.speed + j.scores.rhythm + j.scores.energy)/10).toFixed(1);
+                    scoreText = `<span class="text-[8px] ${hasSubmitted ? 'text-green-400 font-bold' : 'text-yellow-300'} font-mono">${val}${hasSubmitted ? ' ✓' : ''}</span>`;
+                }
+                
                 html += `
                     <div class="flex items-center gap-1.5 px-2 py-0.5 glass-btn rounded text-[9px]">
                         <span class="w-2 h-2 rounded-full ${statusBg}"></span>
                         <span class="font-bold">J${i}</span>
-                        ${hasSubmitted ? `<span class="text-[8px] text-green-400 font-mono">${((j.scores.acc + j.scores.speed + j.scores.rhythm + j.scores.energy)/10).toFixed(1)}</span>` : ''}
+                        ${scoreText}
                     </div>
                 `;
             }
@@ -924,15 +952,22 @@
             return true;
         }
 
-        window.submitFinalJudgeScore = async function() {
+        window.submitFinalJudgeScore = function() {
             if (!canScore()) return; // Valida timer
+            openModal('confirm-send-modal');
+        };
+
+        window.confirmSubmitFinalJudgeScore = async function() {
+            closeModal('confirm-send-modal');
             scores.submitted = true;
             await realtimeManager.sendJudgeScore(scores, true);
             
             // Feedback visual no botão
             const btn = document.getElementById('btn-finalizar');
-            btn.classList.add('opacity-50', 'pointer-events-none');
-            btn.innerHTML = `<span>⏳</span> Enviado`;
+            if (btn) {
+                btn.classList.add('opacity-50', 'pointer-events-none');
+                btn.innerHTML = `<span>⏳</span> Enviado`;
+            }
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         };
 
