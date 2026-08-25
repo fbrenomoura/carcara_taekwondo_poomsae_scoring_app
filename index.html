@@ -216,7 +216,7 @@
         <div class="flex items-center gap-3">
             <div id="connection-indicator" class="w-2 h-2 rounded-full bg-gray-500"></div>
             <h1 class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300 hidden md:block">Carcara Poomsae Scoring System</h1>
-            <span id="session-code-badge" class="hidden px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-mono text-[10px] border border-yellow-500/30 font-bold"></span>
+            <span id="session-code-badge" onclick="window.copySessionCode()" class="hidden px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-mono text-[10px] border border-yellow-500/30 font-bold cursor-pointer hover:bg-yellow-500/40 select-all" title="Copiar código"></span>
             
             <!-- Timer Display -->
             <div id="timer-display-container" class="hidden items-center gap-2 ml-2 px-3 py-0.5 glass-heavy rounded-lg border-blue-500/30">
@@ -349,6 +349,14 @@
                 </button>
             </div>
 
+            <!-- Finalizar Avaliação -->
+            <div class="flex flex-col justify-end items-center h-full pb-2">
+                <button id="btn-finalizar" onclick="window.submitFinalJudgeScore()" class="w-16 h-28 glass-btn rounded-[1.5rem] bg-gradient-to-br from-green-500 to-green-700 flex flex-col items-center justify-center border-t border-green-400 shadow-[0_10px_30px_rgba(34,197,94,0.3)] hover:brightness-110 active:scale-95 transition-all">
+                    <span class="text-xl mb-2">✓</span>
+                    <span class="text-[8px] font-bold uppercase tracking-widest text-center leading-tight">Enviar<br>Nota</span>
+                </button>
+            </div>
+
         </div>
 
         <!-- PAINEL DE LEITURA SOMENTE TELÃO (Espectador) -->
@@ -360,7 +368,7 @@
 
     <!-- Módulo JS Realtime Firebase -->
     <script type="module">
-        import { realtimeManager } from './realtime-manager.js?v=6';
+        import { realtimeManager } from './realtime-manager.js?v=7';
 
         window.realtimeManager = realtimeManager;
         let selectedMasterJudges = 3;
@@ -654,8 +662,26 @@
 
         window.triggerMasterConsolidate = async function() {
             if (realtimeManager.sessionData && realtimeManager.sessionData.judges) {
+                const judges = realtimeManager.sessionData.judges;
+                const numJudges = realtimeManager.sessionData.numJudges;
+                let allSubmitted = true;
+                
+                for(let i=1; i<=numJudges; i++) {
+                    const j = judges[`judge${i}`];
+                    if (j && j.status === 'online') {
+                        if (!j.scores || !j.scores.submitted) {
+                            allSubmitted = false;
+                        }
+                    }
+                }
+                
+                if (!allSubmitted) {
+                    alert("Aguarde todos os juízes online finalizarem suas avaliações!");
+                    return;
+                }
+
                 const penalties = realtimeManager.sessionData.sharedState.penalties || 0;
-                const res = realtimeManager.calculateFinalScore(realtimeManager.sessionData.judges, realtimeManager.sessionData.numJudges, penalties);
+                const res = realtimeManager.calculateFinalScore(judges, numJudges, penalties);
                 const sessionRef = realtimeManager.sessionCode;
                 import('./firebase-config.js').then(async ({ db, doc, updateDoc }) => {
                     const sRef = doc(db, 'poomsae-sessions', sessionRef);
@@ -731,6 +757,9 @@
                 controlsPanel.classList.add('hidden');
                 controlsPanel.classList.remove('flex');
                 spectatorPanel.classList.add('hidden');
+                document.getElementById('val-total').className = "text-[7rem] font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter";
+                document.getElementById('val-acc-display').className = "text-[5rem] font-black text-red-500 score-font glow-red leading-none";
+                document.getElementById('val-pres-display').className = "text-[5rem] font-black text-blue-400 score-font glow-blue leading-none";
             } else if (role === 'judge') {
                 roleBadge.innerText = `⚖️ Juiz ${judgeNum}`;
                 statusText.innerText = `Juiz ${judgeNum} Conectado`;
@@ -740,6 +769,11 @@
                 controlsPanel.classList.remove('hidden');
                 controlsPanel.classList.add('flex');
                 spectatorPanel.classList.add('hidden');
+                document.getElementById('btn-finalizar').classList.remove('opacity-50', 'pointer-events-none');
+                document.getElementById('btn-finalizar').innerHTML = `<span class="text-xl mb-2">✓</span><span class="text-[8px] font-bold uppercase tracking-widest text-center leading-tight">Enviar<br>Nota</span>`;
+                document.getElementById('val-total').className = "text-[7rem] font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter";
+                document.getElementById('val-acc-display').className = "text-[5rem] font-black text-red-500 score-font glow-red leading-none";
+                document.getElementById('val-pres-display').className = "text-[5rem] font-black text-blue-400 score-font glow-blue leading-none";
             } else if (role === 'spectator') {
                 roleBadge.innerText = '🖥️ Telão (Espectador)';
                 statusText.innerText = 'Telão Conectado';
@@ -749,6 +783,9 @@
                 controlsPanel.classList.add('hidden');
                 controlsPanel.classList.remove('flex');
                 spectatorPanel.classList.remove('hidden');
+                document.getElementById('val-total').className = "text-[14vw] font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter";
+                document.getElementById('val-acc-display').className = "text-[8vw] font-black text-red-500 score-font glow-red leading-none";
+                document.getElementById('val-pres-display').className = "text-[8vw] font-black text-blue-400 score-font glow-blue leading-none";
             }
         }
 
@@ -790,6 +827,12 @@
         }
 
         function canScore() {
+            // Se o juiz já enviou a nota final (status local), bloqueia
+            if (window.scores && window.scores.submitted) {
+                alert("Nota já enviada! Aguarde a Mesa Central iniciar uma nova rodada.");
+                return false;
+            }
+
             // Em modo offline, pode pontuar a qualquer momento
             if (realtimeManager.role === 'offline' || !realtimeManager.role) return true;
             
@@ -803,6 +846,27 @@
             }
             return true;
         }
+
+        window.submitFinalJudgeScore = async function() {
+            if (!canScore()) return; // Valida timer
+            scores.submitted = true;
+            await realtimeManager.sendJudgeScore(scores, true);
+            
+            // Feedback visual no botão
+            const btn = document.getElementById('btn-finalizar');
+            btn.classList.add('opacity-50', 'pointer-events-none');
+            btn.innerHTML = `<span class="text-xl mb-2">⏳</span><span class="text-[8px] font-bold uppercase tracking-widest text-center leading-tight">Enviado</span>`;
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        };
+
+        window.copySessionCode = function() {
+            const badge = document.getElementById('session-code-badge');
+            const codeMatch = badge.innerText.match(/\d{6}/);
+            if (codeMatch) {
+                navigator.clipboard.writeText(codeMatch[0]);
+                alert("Código da sessão copiado: " + codeMatch[0]);
+            }
+        };
 
         function changeAcc(amount) {
             if (!canScore()) return;

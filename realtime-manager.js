@@ -247,12 +247,12 @@ export class RealtimeManager {
     }
 
     // Juiz Enviar Nota
-    async sendJudgeScore(scores) {
+    async sendJudgeScore(scores, isFinal = false) {
         if (this.role !== 'judge' || !this.sessionCode || !this.judgeNumber) return;
         
-        // Evita escritas duplicadas se a nota não mudou
-        const scoreStr = JSON.stringify(scores);
-        if (this.lastSentScores === scoreStr) return;
+        // Evita escritas duplicadas se a nota não mudou e não é envio final
+        const scoreStr = JSON.stringify({scores, isFinal});
+        if (!isFinal && this.lastSentScores === scoreStr) return;
 
         const sessionRef = doc(db, 'poomsae-sessions', this.sessionCode);
         const judgeKey = `judge${this.judgeNumber}`;
@@ -260,7 +260,7 @@ export class RealtimeManager {
         const updatePayload = {};
         updatePayload[`judges.${judgeKey}.scores`] = {
             ...scores,
-            submitted: true
+            submitted: isFinal
         };
         updatePayload[`judges.${judgeKey}.lastSeen`] = Date.now();
 
