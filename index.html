@@ -362,7 +362,7 @@
 
     <!-- Módulo JS Realtime Firebase -->
     <script type="module">
-        import { realtimeManager } from './realtime-manager.js?v=10';
+        import { realtimeManager } from './realtime-manager.js?v=11';
 
         window.realtimeManager = realtimeManager;
         let selectedMasterJudges = 3;
@@ -373,14 +373,22 @@
             const ind = document.getElementById('connection-indicator');
             if (ind) ind.className = "w-2 h-2 rounded-full bg-green-500 animate-pulse";
 
-            if (data.sharedState?.roundId !== currentRoundId) {
+            if (data.sharedState?.roundId && data.sharedState?.roundId !== currentRoundId) {
                 currentRoundId = data.sharedState?.roundId;
                 if (realtimeManager.role === 'judge' || realtimeManager.role === 'offline') {
                     scores.acc = 40;
                     scores.speed = 20;
                     scores.rhythm = 20;
                     scores.energy = 20;
+                    scores.submitted = false;
+                    realtimeManager.lastSentScores = null;
                     updateDisplay();
+                    
+                    const btn = document.getElementById('btn-finalizar');
+                    if (btn) {
+                        btn.classList.remove('opacity-50', 'pointer-events-none');
+                        btn.innerHTML = `<span>✓</span> Enviar Nota`;
+                    }
                 }
             }
 
