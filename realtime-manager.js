@@ -13,10 +13,10 @@ import {
 
 // Gerador de ID Único local do dispositivo (evita auth desnecessária)
 function getDeviceId() {
-    let devId = localStorage.getItem('poomsae_device_id');
+    let devId = sessionStorage.getItem('poomsae_device_id');
     if (!devId) {
         devId = 'dev_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-        localStorage.setItem('poomsae_device_id', devId);
+        sessionStorage.setItem('poomsae_device_id', devId);
     }
     return devId;
 }
