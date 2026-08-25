@@ -138,22 +138,9 @@
 
             <!-- SUB-PASSO: ENTRAR COMO JUIZ -->
             <div id="step-join-judge" class="hidden flex-col items-center border-t border-white/10 pt-4 gap-3">
-                <input type="number" id="input-session-code" placeholder="Código (6 dígitos)" class="w-full bg-black/40 border border-white/10 text-center text-xl font-mono tracking-widest py-2 rounded-xl text-yellow-400 focus:outline-none focus:border-yellow-400">
-                
-                <div class="w-full">
-                    <label class="text-[10px] uppercase text-gray-400 font-bold block mb-1">Selecione sua Vaga:</label>
-                    <select id="select-judge-num" class="w-full bg-black/60 border border-white/10 text-xs py-2 px-3 rounded-xl text-white">
-                        <option value="1">Juiz 1</option>
-                        <option value="2">Juiz 2</option>
-                        <option value="3">Juiz 3</option>
-                        <option value="4">Juiz 4</option>
-                        <option value="5">Juiz 5</option>
-                        <option value="6">Juiz 6</option>
-                        <option value="7">Juiz 7</option>
-                    </select>
-                </div>
-
-                <button onclick="executeJoinJudge()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 font-black uppercase rounded-xl text-xs tracking-wider">Conectar Vaga</button>
+                <p class="text-[11px] text-gray-300">Digite o código de 6 dígitos fornecido pela Mesa Central. Sua vaga será atribuída automaticamente.</p>
+                <input type="number" id="input-session-code" placeholder="Código (6 dígitos)" class="w-full bg-black/40 border border-white/10 text-center text-2xl font-mono tracking-widest py-3 rounded-xl text-yellow-400 focus:outline-none focus:border-yellow-400">
+                <button onclick="executeJoinJudge()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 font-black uppercase rounded-xl text-xs tracking-wider">Entrar na Sessão</button>
             </div>
 
             <!-- SUB-PASSO: ENTRAR COMO TELÃO -->
@@ -164,6 +151,35 @@
 
             <div class="mt-4 pt-2 border-t border-white/5">
                 <button onclick="closeModal('shared-mode-modal')" class="text-xs text-gray-400 hover:text-white uppercase font-bold">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA DE ESPERA / LOBBY (Aguardando Conexão dos Juízes) -->
+    <div id="waiting-lobby-overlay" class="custom-modal-overlay" style="z-index: 90;">
+        <div class="glass-heavy p-8 rounded-[2.5rem] max-w-lg w-full text-center border-white/10 flex flex-col items-center">
+            <div class="w-12 h-12 rounded-full bg-yellow-500/20 border border-yellow-500/50 flex items-center justify-center mb-4 animate-bounce">
+                <span class="text-2xl">📡</span>
+            </div>
+            
+            <h3 class="text-xl font-black uppercase tracking-widest text-yellow-400 mb-1">Aguardando Juízes</h3>
+            <p class="text-gray-400 text-xs mb-4">Passe este código para os dispositivos dos juízes:</p>
+            
+            <div class="bg-black/60 border border-yellow-500/30 px-8 py-3 rounded-2xl mb-6">
+                <span id="lobby-code-display" class="text-4xl font-mono font-black text-yellow-400 tracking-[0.3em]">------</span>
+            </div>
+
+            <div class="w-full mb-6">
+                <div class="flex justify-between items-center text-xs font-bold uppercase mb-3 px-2">
+                    <span class="text-gray-400">Status das Vagas:</span>
+                    <span id="lobby-connected-count" class="text-yellow-400 font-mono">0 / 3 Conectados</span>
+                </div>
+                <div id="lobby-judges-list" class="grid grid-cols-3 gap-2"></div>
+            </div>
+
+            <div class="flex gap-3 w-full">
+                <button onclick="leaveCurrentSession()" class="flex-1 py-3 glass-btn rounded-xl font-bold uppercase text-xs tracking-widest text-gray-400">Cancelar</button>
+                <button onclick="masterForceStart()" id="btn-force-start" class="flex-1 py-3 bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-black uppercase rounded-xl text-xs tracking-widest shadow-lg">Iniciar Mesmo Assim</button>
             </div>
         </div>
     </div>
@@ -313,10 +329,16 @@
             const ind = document.getElementById('connection-indicator');
             if (ind) ind.className = "w-2 h-2 rounded-full bg-green-500 animate-pulse";
 
+            // Se o master ou juiz estiver aguardando no Lobby, atualizar contagem/lista
+            if (data.status === 'waiting' && realtimeManager.role === 'master') {
+                updateLobbyUI(data);
+            } else if ((data.status === 'ready' || data.status === 'scoring') && realtimeManager.role === 'master') {
+                closeModal('waiting-lobby-overlay');
+            }
+
             // Atualização da Mesa Central
             if (realtimeManager.role === 'master' && data.judges) {
                 renderMasterJudgesStatus(data.judges, data.numJudges);
-                // Atualizar notas consolidadas
                 const res = realtimeManager.calculateFinalScore(data.judges, data.numJudges);
                 document.getElementById('val-acc-display').innerText = res.acc;
                 document.getElementById('val-pres-display').innerText = res.pres;
@@ -333,6 +355,42 @@
                 if (data.judges) {
                     renderSpectatorJudgesGrid(data.judges, data.numJudges);
                 }
+            }
+        };
+
+        // Atualizar Sala de Espera da Mesa Central
+        function updateLobbyUI(data) {
+            document.getElementById('lobby-code-display').innerText = data.code;
+            const judges = data.judges || {};
+            const numJudges = data.numJudges || 3;
+            let onlineCount = 0;
+            let html = '';
+
+            for (let i = 1; i <= numJudges; i++) {
+                const j = judges[`judge${i}`];
+                const isOnline = j && j.status === 'online' && (Date.now() - (j.lastSeen || 0)) <= 8000;
+                if (isOnline) onlineCount++;
+
+                html += `
+                    <div class="p-3 rounded-xl border flex flex-col items-center justify-center ${isOnline ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-white/5 border-white/10 text-gray-500'}">
+                        <span class="text-xs font-black">Juiz ${i}</span>
+                        <span class="text-[9px] uppercase font-bold mt-1">${isOnline ? 'Conectado ✓' : 'Aguardando...'}</span>
+                    </div>
+                `;
+            }
+
+            document.getElementById('lobby-connected-count').innerText = `${onlineCount} / ${numJudges} Conectados`;
+            document.getElementById('lobby-judges-list').innerHTML = html;
+            openModal('waiting-lobby-overlay');
+        }
+
+        window.masterForceStart = function() {
+            closeModal('waiting-lobby-overlay');
+            if (realtimeManager.sessionCode) {
+                import('./firebase-config.js').then(async ({ db, doc, updateDoc }) => {
+                    const sRef = doc(db, 'poomsae-sessions', realtimeManager.sessionCode);
+                    await updateDoc(sRef, { status: 'scoring' });
+                });
             }
         };
 
@@ -426,13 +484,12 @@
 
         window.executeJoinJudge = async function() {
             const code = document.getElementById('input-session-code').value.trim();
-            const judgeNum = document.getElementById('select-judge-num').value;
             if (!code || code.length !== 6) {
                 alert("Digite o código de 6 dígitos.");
                 return;
             }
             try {
-                await realtimeManager.joinAsJudge(code, judgeNum);
+                const judgeNum = await realtimeManager.joinAsJudge(code);
                 closeModal('shared-mode-modal');
                 updateUIState('judge', code, judgeNum);
             } catch (err) {
@@ -456,6 +513,7 @@
         };
 
         window.leaveCurrentSession = async function() {
+            closeModal('waiting-lobby-overlay');
             await realtimeManager.leaveSession();
             updateUIState('offline');
         };
@@ -467,7 +525,6 @@
         window.triggerMasterConsolidate = async function() {
             if (realtimeManager.sessionData && realtimeManager.sessionData.judges) {
                 const res = realtimeManager.calculateFinalScore(realtimeManager.sessionData.judges, realtimeManager.sessionData.numJudges);
-                // Atualiza Firestore para todos os dispositivos
                 const sessionRef = realtimeManager.sessionCode;
                 import('./firebase-config.js').then(async ({ db, doc, updateDoc }) => {
                     const sRef = doc(db, 'poomsae-sessions', sessionRef);

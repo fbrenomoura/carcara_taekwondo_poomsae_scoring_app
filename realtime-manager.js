@@ -78,8 +78,8 @@ export class RealtimeManager {
         return code;
     }
 
-    // 2. Conectar como Juiz
-    async joinAsJudge(code, selectedJudgeNum) {
+    // 2. Conectar como Juiz (Alocação Automática de Vaga)
+    async joinAsJudge(code) {
         const sessionRef = doc(db, 'poomsae-sessions', code);
         const snap = await getDoc(sessionRef);
 
@@ -88,37 +88,67 @@ export class RealtimeManager {
         }
 
         const data = snap.data();
-        const judgeKey = `judge${selectedJudgeNum}`;
-        const targetJudge = data.judges ? data.judges[judgeKey] : null;
-
-        if (!targetJudge) {
-            throw new Error(`Juiz ${selectedJudgeNum} não está disponível para esta sessão de ${data.numJudges} juízes.`);
-        }
-
+        const numJudges = data.numJudges || 3;
         const now = Date.now();
-        // Verificar se vaga está livre ou se é a reconexão do mesmo dispositivo ou se deu timeout (8s)
-        const isExpired = (now - (targetJudge.lastSeen || 0)) > 8000;
-        const isSameDevice = targetJudge.deviceId === this.deviceId;
 
-        if (targetJudge.status === 'online' && !isExpired && !isSameDevice) {
-            throw new Error(`A vaga de Juiz ${selectedJudgeNum} já está ocupada por outro dispositivo.`);
+        let assignedJudgeNum = null;
+
+        // 1º Verificar se este dispositivo já estava em uma vaga (Reconexão)
+        for (let i = 1; i <= numJudges; i++) {
+            const j = data.judges ? data.judges[`judge${i}`] : null;
+            if (j && j.deviceId === this.deviceId) {
+                assignedJudgeNum = i;
+                break;
+            }
         }
 
-        // Assumir Vaga
+        // 2º Se não for reconexão, encontrar a primeira vaga vaga/disponível ou offline (timeout > 8s)
+        if (!assignedJudgeNum) {
+            for (let i = 1; i <= numJudges; i++) {
+                const j = data.judges ? data.judges[`judge${i}`] : null;
+                const isExpired = !j || (now - (j.lastSeen || 0)) > 8000;
+                const isVacant = !j || j.status === 'vacant' || j.status === 'offline' || isExpired;
+                
+                if (isVacant) {
+                    assignedJudgeNum = i;
+                    break;
+                }
+            }
+        }
+
+        if (!assignedJudgeNum) {
+            throw new Error(`Todas as ${numJudges} vagas de juízes para esta sessão já estão preenchidas.`);
+        }
+
+        const judgeKey = `judge${assignedJudgeNum}`;
         const updatePayload = {};
         updatePayload[`judges.${judgeKey}.deviceId`] = this.deviceId;
         updatePayload[`judges.${judgeKey}.lastSeen`] = now;
         updatePayload[`judges.${judgeKey}.status`] = 'online';
 
+        // Verificar se com a entrada deste juiz todos estão conectados
+        let onlineCount = 1; // Este juiz
+        for (let i = 1; i <= numJudges; i++) {
+            if (i === assignedJudgeNum) continue;
+            const j = data.judges ? data.judges[`judge${i}`] : null;
+            if (j && j.status === 'online' && (now - (j.lastSeen || 0)) <= 8000) {
+                onlineCount++;
+            }
+        }
+
+        if (onlineCount >= numJudges) {
+            updatePayload['status'] = 'ready';
+        }
+
         await updateDoc(sessionRef, updatePayload);
 
         this.sessionCode = code;
         this.role = 'judge';
-        this.judgeNumber = selectedJudgeNum;
+        this.judgeNumber = assignedJudgeNum;
 
         this.listenToSession(code);
         this.startJudgeHeartbeat();
-        return true;
+        return assignedJudgeNum;
     }
 
     // 3. Conectar como Espectador (Telão)
