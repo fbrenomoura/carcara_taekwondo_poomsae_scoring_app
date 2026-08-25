@@ -373,7 +373,7 @@
 
     <!-- Módulo JS Realtime Firebase -->
     <script type="module">
-        import { realtimeManager } from './realtime-manager.js?v=12';
+        import { realtimeManager } from './realtime-manager.js?v=13';
 
         window.realtimeManager = realtimeManager;
         let selectedMasterJudges = 3;
@@ -745,7 +745,7 @@
 
         function updateUIState(role, code = null, judgeNum = null) {
             const badge = document.getElementById('session-code-badge');
-            const roleBadge = document.getElementById('current-role-badge');
+            const roleBadge = document.getElementById('role-badge');
             const statusText = document.getElementById('shared-status-text');
             const leaveBtn = document.getElementById('btn-leave-session');
             const resetBtn = document.getElementById('btn-reset-app');
@@ -753,74 +753,116 @@
             const masterMainPanel = document.getElementById('master-main-panel');
             const controlsPanel = document.getElementById('controls-panel');
             const spectatorPanel = document.getElementById('spectator-view-panel');
+            const finalizarBtn = document.getElementById('btn-finalizar');
+            const connInd = document.getElementById('connection-indicator');
 
             if (role === 'offline') {
-                badge.classList.add('hidden');
-                roleBadge.innerText = '';
-                statusText.innerText = 'Modo Compartilhado';
-                leaveBtn.classList.add('hidden');
-                resetBtn.classList.remove('hidden');
-                masterPanel.classList.add('hidden');
-                masterMainPanel.classList.add('hidden');
-                controlsPanel.classList.remove('hidden'); // Fallback para single mode
-                controlsPanel.classList.add('flex');
-                spectatorPanel.classList.add('hidden');
-                document.getElementById('btn-finalizar').classList.add('hidden');
-                document.getElementById('btn-finalizar').classList.remove('flex');
-                document.getElementById('connection-indicator').className = "hidden w-2 h-2 rounded-full bg-gray-500";
+                if (badge) badge.classList.add('hidden');
+                if (roleBadge) roleBadge.innerText = '';
+                if (statusText) statusText.innerText = 'Modo Compartilhado';
+                if (leaveBtn) leaveBtn.classList.add('hidden');
+                if (resetBtn) resetBtn.classList.remove('hidden');
+                if (masterPanel) masterPanel.classList.add('hidden');
+                if (masterMainPanel) masterMainPanel.classList.add('hidden');
+                if (controlsPanel) {
+                    controlsPanel.classList.remove('hidden'); // Fallback para single mode
+                    controlsPanel.classList.add('flex');
+                }
+                if (spectatorPanel) spectatorPanel.classList.add('hidden');
+                if (finalizarBtn) {
+                    finalizarBtn.classList.add('hidden');
+                    finalizarBtn.classList.remove('flex');
+                }
+                if (connInd) connInd.className = "hidden w-2 h-2 rounded-full bg-gray-500";
+
+                const valTotal = document.getElementById('val-total');
+                const valAcc = document.getElementById('val-acc-display');
+                const valPres = document.getElementById('val-pres-display');
+                if (valTotal) valTotal.className = "text-[7rem] font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter";
+                if (valAcc) valAcc.className = "text-[5rem] font-black text-red-500 score-font glow-red leading-none";
+                if (valPres) valPres.className = "text-[5rem] font-black text-blue-400 score-font glow-blue leading-none";
                 return;
             }
 
-            badge.classList.remove('hidden');
-            badge.innerText = `Sessão: ${code}`;
-            leaveBtn.classList.remove('hidden');
+            if (badge) {
+                badge.classList.remove('hidden');
+                badge.innerText = `Sessão: ${code}`;
+            }
+            if (leaveBtn) leaveBtn.classList.remove('hidden');
 
             if (role === 'master') {
-                roleBadge.innerText = '👑 Mesa Central';
-                statusText.innerText = 'Master Conectado';
-                resetBtn.classList.remove('hidden');
-                masterPanel.classList.remove('hidden');
-                masterMainPanel.classList.remove('hidden');
-                masterMainPanel.classList.add('flex');
-                controlsPanel.classList.add('hidden');
-                controlsPanel.classList.remove('flex');
-                spectatorPanel.classList.add('hidden');
-                document.getElementById('btn-finalizar').classList.add('hidden');
-                document.getElementById('btn-finalizar').classList.remove('flex');
-                document.getElementById('val-total').className = "text-[7rem] font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter";
-                document.getElementById('val-acc-display').className = "text-[5rem] font-black text-red-500 score-font glow-red leading-none";
-                document.getElementById('val-pres-display').className = "text-[5rem] font-black text-blue-400 score-font glow-blue leading-none";
+                if (roleBadge) roleBadge.innerText = '👑 Mesa Central';
+                if (statusText) statusText.innerText = 'Master Conectado';
+                if (resetBtn) resetBtn.classList.remove('hidden');
+                if (masterPanel) masterPanel.classList.remove('hidden');
+                if (masterMainPanel) {
+                    masterMainPanel.classList.remove('hidden');
+                    masterMainPanel.classList.add('flex');
+                }
+                if (controlsPanel) {
+                    controlsPanel.classList.add('hidden');
+                    controlsPanel.classList.remove('flex');
+                }
+                if (spectatorPanel) spectatorPanel.classList.add('hidden');
+                if (finalizarBtn) {
+                    finalizarBtn.classList.add('hidden');
+                    finalizarBtn.classList.remove('flex');
+                }
+                const valTotal = document.getElementById('val-total');
+                const valAcc = document.getElementById('val-acc-display');
+                const valPres = document.getElementById('val-pres-display');
+                if (valTotal) valTotal.className = "text-[7rem] font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter";
+                if (valAcc) valAcc.className = "text-[5rem] font-black text-red-500 score-font glow-red leading-none";
+                if (valPres) valPres.className = "text-[5rem] font-black text-blue-400 score-font glow-blue leading-none";
             } else if (role === 'judge') {
-                roleBadge.innerText = `⚖️ Juiz ${judgeNum}`;
-                statusText.innerText = `Juiz ${judgeNum} Conectado`;
-                resetBtn.classList.add('hidden');
-                masterPanel.classList.add('hidden');
-                masterMainPanel.classList.add('hidden');
-                masterMainPanel.classList.remove('flex');
-                controlsPanel.classList.remove('hidden');
-                controlsPanel.classList.add('flex');
-                spectatorPanel.classList.add('hidden');
-                document.getElementById('btn-finalizar').classList.remove('hidden', 'opacity-50', 'pointer-events-none');
-                document.getElementById('btn-finalizar').classList.add('flex');
-                document.getElementById('btn-finalizar').innerHTML = `<span>✓</span> Enviar Nota`;
-                document.getElementById('val-total').className = "text-[7rem] font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter";
-                document.getElementById('val-acc-display').className = "text-[5rem] font-black text-red-500 score-font glow-red leading-none";
-                document.getElementById('val-pres-display').className = "text-[5rem] font-black text-blue-400 score-font glow-blue leading-none";
+                if (roleBadge) roleBadge.innerText = `⚖️ Juiz ${judgeNum}`;
+                if (statusText) statusText.innerText = `Juiz ${judgeNum} Conectado`;
+                if (resetBtn) resetBtn.classList.add('hidden');
+                if (masterPanel) masterPanel.classList.add('hidden');
+                if (masterMainPanel) {
+                    masterMainPanel.classList.add('hidden');
+                    masterMainPanel.classList.remove('flex');
+                }
+                if (controlsPanel) {
+                    controlsPanel.classList.remove('hidden');
+                    controlsPanel.classList.add('flex');
+                }
+                if (spectatorPanel) spectatorPanel.classList.add('hidden');
+                if (finalizarBtn) {
+                    finalizarBtn.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
+                    finalizarBtn.classList.add('flex');
+                    finalizarBtn.innerHTML = `<span>✓</span> Enviar Nota`;
+                }
+                const valTotal = document.getElementById('val-total');
+                const valAcc = document.getElementById('val-acc-display');
+                const valPres = document.getElementById('val-pres-display');
+                if (valTotal) valTotal.className = "text-[7rem] font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter";
+                if (valAcc) valAcc.className = "text-[5rem] font-black text-red-500 score-font glow-red leading-none";
+                if (valPres) valPres.className = "text-[5rem] font-black text-blue-400 score-font glow-blue leading-none";
             } else if (role === 'spectator') {
-                roleBadge.innerText = '🖥️ Telão (Espectador)';
-                statusText.innerText = 'Telão Conectado';
-                resetBtn.classList.add('hidden');
-                masterPanel.classList.add('hidden');
-                masterMainPanel.classList.add('hidden');
-                masterMainPanel.classList.remove('flex');
-                controlsPanel.classList.add('hidden');
-                controlsPanel.classList.remove('flex');
-                spectatorPanel.classList.remove('hidden');
-                document.getElementById('btn-finalizar').classList.add('hidden');
-                document.getElementById('btn-finalizar').classList.remove('flex');
-                document.getElementById('val-total').className = "text-[14vw] font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter";
-                document.getElementById('val-acc-display').className = "text-[8vw] font-black text-red-500 score-font glow-red leading-none";
-                document.getElementById('val-pres-display').className = "text-[8vw] font-black text-blue-400 score-font glow-blue leading-none";
+                if (roleBadge) roleBadge.innerText = '🖥️ Telão (Espectador)';
+                if (statusText) statusText.innerText = 'Telão Conectado';
+                if (resetBtn) resetBtn.classList.add('hidden');
+                if (masterPanel) masterPanel.classList.add('hidden');
+                if (masterMainPanel) {
+                    masterMainPanel.classList.add('hidden');
+                    masterMainPanel.classList.remove('flex');
+                }
+                if (controlsPanel) {
+                    controlsPanel.classList.add('hidden');
+                    controlsPanel.classList.remove('flex');
+                }
+                if (spectatorPanel) spectatorPanel.classList.remove('hidden');
+                if (finalizarBtn) {
+                    finalizarBtn.classList.add('hidden');
+                    finalizarBtn.classList.remove('flex');
+                }
+                const valTotal = document.getElementById('val-total');
+                const valAcc = document.getElementById('val-acc-display');
+                const valPres = document.getElementById('val-pres-display');
+                if (valTotal) valTotal.className = "text-[14vw] font-black text-yellow-400 score-font glow-yellow leading-none tracking-tighter";
+                if (valAcc) valAcc.className = "text-[8vw] font-black text-red-500 score-font glow-red leading-none";
+                if (valPres) valPres.className = "text-[8vw] font-black text-blue-400 score-font glow-blue leading-none";
             }
         }
 
