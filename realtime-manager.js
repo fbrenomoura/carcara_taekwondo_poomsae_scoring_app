@@ -168,7 +168,7 @@ export class RealtimeManager {
         const data = snap.data();
         const currentSpecs = data.spectatorsCount || 0;
         if (currentSpecs >= 3) {
-            throw new Error("Limite máximo de 3 telões conectados foi atingido.");
+            throw new Error("Limite máximo de 3 telas conectadas foi atingido.");
         }
 
         await updateDoc(sessionRef, {
