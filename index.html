@@ -113,9 +113,10 @@
 
     <!-- MODAL DE SELEÇÃO DE MODO COMPARTILHADO -->
     <div id="shared-mode-modal" class="custom-modal-overlay">
-        <div class="glass-heavy p-6 rounded-[2rem] max-w-md w-full text-center border-white/10">
-            <h3 class="text-lg font-black uppercase tracking-widest mb-2 text-yellow-400">Modo Compartilhado</h3>
-            <p class="text-gray-400 text-xs mb-6">Conecte dispositivos em tempo real via Firebase</p>
+        <div class="glass-heavy p-6 rounded-[2rem] max-w-md w-full text-center border-white/10 relative">
+            <button onclick="closeModal('shared-mode-modal')" class="absolute top-4 right-4 w-8 h-8 rounded-full glass-btn flex items-center justify-center text-gray-400 hover:text-white font-bold text-sm">✕</button>
+            <h3 class="text-lg font-black uppercase tracking-widest mb-1 text-yellow-400">Modo Compartilhado</h3>
+            <p class="text-gray-400 text-xs mb-4">Conecte dispositivos em tempo real via Firebase</p>
             
             <div class="grid grid-cols-3 gap-3 mb-6">
                 <button onclick="showCreateSessionStep()" class="glass-btn p-4 rounded-xl flex flex-col items-center justify-center hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all">
@@ -164,6 +165,16 @@
             <div class="mt-4 pt-2 border-t border-white/5">
                 <button onclick="closeModal('shared-mode-modal')" class="text-xs text-gray-400 hover:text-white uppercase font-bold">Cancelar</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL CUSTOMIZADO DE ALERTA / AVISO -->
+    <div id="custom-alert-modal" class="custom-modal-overlay">
+        <div class="glass-heavy p-6 rounded-[2rem] max-w-xs w-full text-center border-white/10">
+            <div id="custom-alert-icon" class="text-3xl mb-2">⚠️</div>
+            <h3 id="custom-alert-title" class="text-lg font-black uppercase tracking-widest text-yellow-400 mb-2">Aviso</h3>
+            <p id="custom-alert-message" class="text-gray-300 text-xs mb-6 leading-relaxed"></p>
+            <button onclick="closeModal('custom-alert-modal')" class="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase rounded-xl text-xs tracking-wider shadow-lg">OK</button>
         </div>
     </div>
 
@@ -228,7 +239,7 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <button onclick="openModal('reset-modal')" class="glass-btn px-4 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-red-500 border-red-500/20 hover:bg-red-500/10 active:scale-95 transition-all">
+            <button onclick="openModal('reset-modal')" id="btn-reset-app" class="glass-btn px-4 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-red-500 border-red-500/20 hover:bg-red-500/10 active:scale-95 transition-all">
                 Recomeçar
             </button>
             <button onclick="leaveCurrentSession()" id="btn-leave-session" class="hidden glass-btn px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-gray-400 border-gray-500/20 hover:bg-white/10">
@@ -362,7 +373,7 @@
 
     <!-- Módulo JS Realtime Firebase -->
     <script type="module">
-        import { realtimeManager } from './realtime-manager.js?v=11';
+        import { realtimeManager } from './realtime-manager.js?v=12';
 
         window.realtimeManager = realtimeManager;
         let selectedMasterJudges = 3;
@@ -572,20 +583,30 @@
             document.getElementById('step-join-judge').classList.add('hidden');
         };
 
+        window.showAlert = function(message, title = "Aviso", icon = "⚠️") {
+            const msgEl = document.getElementById('custom-alert-message');
+            const titleEl = document.getElementById('custom-alert-title');
+            const iconEl = document.getElementById('custom-alert-icon');
+            if (msgEl) msgEl.innerText = message;
+            if (titleEl) titleEl.innerText = title;
+            if (iconEl) iconEl.innerText = icon;
+            openModal('custom-alert-modal');
+        };
+
         window.executeCreateSession = async function() {
             try {
                 const code = await realtimeManager.createSession(selectedMasterJudges);
                 closeModal('shared-mode-modal');
                 updateUIState('master', code);
             } catch (err) {
-                alert("Erro ao criar sessão: " + err.message);
+                showAlert("Erro ao criar sessão: " + err.message, "Erro", "❌");
             }
         };
 
         window.executeJoinJudge = async function() {
             const code = document.getElementById('input-session-code').value.trim();
             if (!code || code.length !== 6) {
-                alert("Digite o código de 6 dígitos.");
+                showAlert("Digite o código de 6 dígitos.");
                 return;
             }
             try {
@@ -593,14 +614,14 @@
                 closeModal('shared-mode-modal');
                 updateUIState('judge', code, judgeNum);
             } catch (err) {
-                alert("Erro ao entrar: " + err.message);
+                showAlert("Erro ao entrar: " + err.message, "Erro", "❌");
             }
         };
 
         window.executeJoinSpectator = async function() {
             const code = document.getElementById('input-spec-code').value.trim();
             if (!code || code.length !== 6) {
-                alert("Digite o código de 6 dígitos.");
+                showAlert("Digite o código de 6 dígitos.");
                 return;
             }
             try {
@@ -608,7 +629,7 @@
                 closeModal('shared-mode-modal');
                 updateUIState('spectator', code);
             } catch (err) {
-                alert("Erro ao conectar Telão: " + err.message);
+                showAlert("Erro ao conectar Telão: " + err.message, "Erro", "❌");
             }
         };
 
@@ -678,7 +699,7 @@
                 }
                 
                 if (!allSubmitted) {
-                    alert("Aguarde todos os juízes online finalizarem suas avaliações!");
+                    showAlert("Aguarde todos os juízes online finalizarem suas avaliações!", "Atenção", "⏳");
                     return;
                 }
 
@@ -724,9 +745,10 @@
 
         function updateUIState(role, code = null, judgeNum = null) {
             const badge = document.getElementById('session-code-badge');
-            const roleBadge = document.getElementById('role-badge');
+            const roleBadge = document.getElementById('current-role-badge');
             const statusText = document.getElementById('shared-status-text');
             const leaveBtn = document.getElementById('btn-leave-session');
+            const resetBtn = document.getElementById('btn-reset-app');
             const masterPanel = document.getElementById('master-control-panel');
             const masterMainPanel = document.getElementById('master-main-panel');
             const controlsPanel = document.getElementById('controls-panel');
@@ -737,6 +759,7 @@
                 roleBadge.innerText = '';
                 statusText.innerText = 'Modo Compartilhado';
                 leaveBtn.classList.add('hidden');
+                resetBtn.classList.remove('hidden');
                 masterPanel.classList.add('hidden');
                 masterMainPanel.classList.add('hidden');
                 controlsPanel.classList.remove('hidden'); // Fallback para single mode
@@ -755,6 +778,7 @@
             if (role === 'master') {
                 roleBadge.innerText = '👑 Mesa Central';
                 statusText.innerText = 'Master Conectado';
+                resetBtn.classList.remove('hidden');
                 masterPanel.classList.remove('hidden');
                 masterMainPanel.classList.remove('hidden');
                 masterMainPanel.classList.add('flex');
@@ -769,6 +793,7 @@
             } else if (role === 'judge') {
                 roleBadge.innerText = `⚖️ Juiz ${judgeNum}`;
                 statusText.innerText = `Juiz ${judgeNum} Conectado`;
+                resetBtn.classList.add('hidden');
                 masterPanel.classList.add('hidden');
                 masterMainPanel.classList.add('hidden');
                 masterMainPanel.classList.remove('flex');
@@ -784,6 +809,7 @@
             } else if (role === 'spectator') {
                 roleBadge.innerText = '🖥️ Telão (Espectador)';
                 statusText.innerText = 'Telão Conectado';
+                resetBtn.classList.add('hidden');
                 masterPanel.classList.add('hidden');
                 masterMainPanel.classList.add('hidden');
                 masterMainPanel.classList.remove('flex');
@@ -838,7 +864,7 @@
         function canScore() {
             // Se o juiz já enviou a nota final (status local), bloqueia
             if (window.scores && window.scores.submitted) {
-                alert("Nota já enviada! Aguarde a Mesa Central iniciar uma nova rodada.");
+                showAlert("Nota já enviada! Aguarde a Mesa Central iniciar uma nova rodada.", "Atenção", "✋");
                 return false;
             }
 
@@ -849,7 +875,7 @@
             if (realtimeManager.role === 'judge') {
                 const started = realtimeManager.sessionData?.sharedState?.timerStart || realtimeManager.sessionData?.sharedState?.timerPausedAt;
                 if (!started) {
-                    alert("Aguarde a Mesa Central iniciar o tempo!");
+                    showAlert("Aguarde a Mesa Central iniciar o tempo!", "Atenção", "⏱️");
                     return false;
                 }
             }
@@ -873,7 +899,7 @@
             const codeMatch = badge.innerText.match(/\d{6}/);
             if (codeMatch) {
                 navigator.clipboard.writeText(codeMatch[0]);
-                alert("Código da sessão copiado: " + codeMatch[0]);
+                showAlert("Código da sessão copiado: " + codeMatch[0], "Copiado", "📋");
             }
         };
 
