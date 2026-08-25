@@ -224,22 +224,9 @@
 
     <!-- PAINEL EXCLUSIVO MESA CENTRAL / MASTER -->
     <div id="master-control-panel" class="hidden h-12 w-full glass-heavy bg-yellow-500/10 px-8 flex items-center justify-between z-20 border-x-0 border-t-0 border-yellow-500/20">
-        <div class="flex items-center gap-4 text-xs w-1/4">
+        <div class="flex items-center gap-4 text-xs w-full">
             <span class="font-black text-yellow-400 uppercase text-[10px]">Mesa Central</span>
             <div id="master-judges-status" class="flex gap-2"></div>
-        </div>
-        
-        <div class="flex items-center justify-center gap-2 w-2/4">
-            <button onclick="window.masterStartTimer()" class="px-2 py-1 glass-btn rounded text-[9px] font-bold text-green-400 hover:bg-green-500/20">▶ Iniciar</button>
-            <button onclick="window.masterPauseTimer()" class="px-2 py-1 glass-btn rounded text-[9px] font-bold text-yellow-400 hover:bg-yellow-500/20">⏸ Pausar</button>
-            <button onclick="window.masterResetTimer()" class="px-2 py-1 glass-btn rounded text-[9px] font-bold text-gray-400 hover:bg-white/10">↺ Zerar</button>
-            <div class="w-px h-4 bg-white/20 mx-1"></div>
-            <button onclick="window.masterAddPenalty()" class="px-2 py-1 glass-btn rounded text-[9px] font-black text-red-500 hover:bg-red-500/20 border border-red-500/30">-0.3 Gam-jeom</button>
-        </div>
-
-        <div class="flex items-center justify-end gap-3 w-1/4">
-            <button onclick="triggerMasterConsolidate()" class="px-3 py-1 bg-yellow-500 text-black text-[9px] font-black uppercase rounded-lg shadow hover:bg-yellow-400">Consolidar</button>
-            <button onclick="triggerMasterResetRound()" class="px-3 py-1 bg-red-600 text-white text-[9px] font-black uppercase rounded-lg shadow hover:bg-red-500">Nova Rodada</button>
         </div>
     </div>
 
@@ -269,8 +256,35 @@
             </div>
         </div>
 
-        <!-- PAINEL DE CONTROLOS INFERIOR -->
-        <div id="controls-panel" class="flex-1 flex items-center justify-between px-6 pb-4 gap-4 z-20 max-h-[45%] mt-auto">
+        <!-- PAINEL PRINCIPAL DA MESA CENTRAL -->
+        <div id="master-main-panel" class="hidden flex-1 items-center justify-center px-12 pb-8 gap-6 z-20 mt-auto">
+            <!-- Controle do Cronômetro -->
+            <div class="flex flex-col items-center gap-3">
+                <button id="btn-toggle-timer" onclick="window.masterToggleTimer()" class="w-32 py-4 glass-heavy rounded-2xl border-b-2 border-green-500/50 hover:bg-green-500/10 active:scale-95 transition-all text-green-400 shadow-[0_5px_15px_rgba(34,197,94,0.3)]">
+                    <span class="block text-2xl mb-1">▶</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Iniciar Tempo</span>
+                </button>
+                <button onclick="window.masterResetTimer()" class="w-32 py-2 glass-btn rounded-xl text-[9px] font-black uppercase tracking-widest text-gray-400 hover:bg-white/10 active:scale-95">↺ Zerar Tempo</button>
+            </div>
+
+            <!-- Penalidade -->
+            <button onclick="window.masterAddPenalty()" class="w-32 py-4 glass-heavy rounded-2xl border-b-2 border-red-500/50 hover:bg-red-500/10 active:scale-95 transition-all text-red-500 shadow-[0_5px_15px_rgba(239,68,68,0.3)] flex flex-col items-center justify-center">
+                <span class="block text-3xl font-black score-font mb-1">-0.3</span>
+                <span class="text-[9px] font-black uppercase tracking-widest">Gam-jeom</span>
+            </button>
+
+            <!-- Ações de Sessão -->
+            <div class="flex flex-col items-center gap-3 ml-4 pl-8 border-l border-white/10">
+                <button onclick="triggerMasterConsolidate()" class="w-40 py-4 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl border-b-2 border-yellow-700 hover:brightness-110 active:scale-95 transition-all text-black shadow-[0_5px_15px_rgba(234,179,8,0.4)] flex flex-col items-center justify-center">
+                    <span class="text-xl mb-1">✓</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Consolidar</span>
+                </button>
+                <button onclick="triggerMasterResetRound()" class="w-40 py-2 glass-btn rounded-xl text-[9px] font-black uppercase tracking-widest text-gray-300 hover:bg-white/10 active:scale-95">Nova Rodada</button>
+            </div>
+        </div>
+
+        <!-- PAINEL DE CONTROLOS INFERIOR (APENAS JUÍZES) -->
+        <div id="controls-panel" class="hidden flex-1 items-center justify-between px-6 pb-4 gap-4 z-20 max-h-[45%] mt-auto">
             
             <!-- Dedução -0.3 -->
             <div class="flex flex-col items-center gap-2">
@@ -334,7 +348,7 @@
 
     <!-- Módulo JS Realtime Firebase -->
     <script type="module">
-        import { realtimeManager } from './realtime-manager.js?v=4';
+        import { realtimeManager } from './realtime-manager.js?v=5';
 
         window.realtimeManager = realtimeManager;
         let selectedMasterJudges = 3;
@@ -375,13 +389,24 @@
 
             // Atualização do Telão (Espectador)
             if (realtimeManager.role === 'spectator') {
-                if (data.sharedState) {
+                const isConsolidated = data.sharedState && data.sharedState.consolidated;
+                
+                if (isConsolidated) {
                     document.getElementById('val-acc-display').innerText = data.sharedState.accDisplay || "4.0";
                     document.getElementById('val-pres-display').innerText = data.sharedState.presDisplay || "6.0";
                     document.getElementById('val-total').innerText = data.sharedState.totalDisplay || "10.0";
+                } else {
+                    document.getElementById('val-acc-display').innerText = "-.-";
+                    document.getElementById('val-pres-display').innerText = "-.-";
+                    document.getElementById('val-total').innerText = "-.-";
+                    
+                    if (pBadge) {
+                        pBadge.classList.add('hidden'); // Ocultar penalidade se não estiver consolidado
+                    }
                 }
+
                 if (data.judges) {
-                    renderSpectatorJudgesGrid(data.judges, data.numJudges);
+                    renderSpectatorJudgesGrid(data.judges, data.numJudges, isConsolidated);
                 }
             }
         };
@@ -445,14 +470,19 @@
         }
 
         // Render Status dos Juízes no Telão
-        function renderSpectatorJudgesGrid(judges, numJudges) {
+        function renderSpectatorJudgesGrid(judges, numJudges, isConsolidated) {
             const container = document.getElementById('spectator-judges-grid');
             if (!container) return;
             let html = '';
             for (let i = 1; i <= numJudges; i++) {
                 const j = judges[`judge${i}`];
                 const hasSubmitted = j && j.scores && j.scores.submitted;
-                const total = hasSubmitted ? ((j.scores.acc + j.scores.speed + j.scores.rhythm + j.scores.energy)/10).toFixed(1) : '-.-';
+                let total = '-.-';
+                if (isConsolidated && hasSubmitted) {
+                    total = ((j.scores.acc + j.scores.speed + j.scores.rhythm + j.scores.energy)/10).toFixed(1);
+                } else if (hasSubmitted) {
+                    total = '✓'; // Apenas mostra que já enviou a nota
+                }
                 
                 html += `
                     <div class="glass-heavy px-4 py-2 rounded-xl flex flex-col items-center">
@@ -600,15 +630,36 @@
                     await updateDoc(sRef, {
                         "sharedState.accDisplay": res.acc,
                         "sharedState.presDisplay": res.pres,
-                        "sharedState.totalDisplay": res.total
+                        "sharedState.totalDisplay": res.total,
+                        "sharedState.consolidated": true
                     });
                 });
             }
         };
 
-        window.masterStartTimer = () => realtimeManager.startTimer();
-        window.masterPauseTimer = () => realtimeManager.pauseTimer();
-        window.masterResetTimer = () => realtimeManager.resetTimer();
+        window.masterToggleTimer = function() {
+            const btn = document.getElementById('btn-toggle-timer');
+            // If timer is running, pause it. If paused/stopped, start it.
+            if (timerInterval && realtimeManager.sessionData?.sharedState?.timerStart && !realtimeManager.sessionData?.sharedState?.timerPausedAt) {
+                // Running -> Pause
+                realtimeManager.pauseTimer();
+                btn.innerHTML = `<span class="block text-2xl mb-1">▶</span><span class="text-[10px] font-black uppercase tracking-widest">Retomar</span>`;
+                btn.className = "w-32 py-4 glass-heavy rounded-2xl border-b-2 border-yellow-500/50 hover:bg-yellow-500/10 active:scale-95 transition-all text-yellow-400 shadow-[0_5px_15px_rgba(234,179,8,0.3)]";
+            } else {
+                // Paused/Stopped -> Start
+                realtimeManager.startTimer();
+                btn.innerHTML = `<span class="block text-2xl mb-1">⏸</span><span class="text-[10px] font-black uppercase tracking-widest">Pausar</span>`;
+                btn.className = "w-32 py-4 glass-heavy rounded-2xl border-b-2 border-blue-500/50 hover:bg-blue-500/10 active:scale-95 transition-all text-blue-400 shadow-[0_5px_15px_rgba(59,130,246,0.3)]";
+            }
+        };
+
+        window.masterResetTimer = function() {
+            realtimeManager.resetTimer();
+            const btn = document.getElementById('btn-toggle-timer');
+            btn.innerHTML = `<span class="block text-2xl mb-1">▶</span><span class="text-[10px] font-black uppercase tracking-widest">Iniciar Tempo</span>`;
+            btn.className = "w-32 py-4 glass-heavy rounded-2xl border-b-2 border-green-500/50 hover:bg-green-500/10 active:scale-95 transition-all text-green-400 shadow-[0_5px_15px_rgba(34,197,94,0.3)]";
+        };
+        
         window.masterAddPenalty = () => realtimeManager.addPenalty(1);
 
         function updateUIState(role, code = null, judgeNum = null) {
@@ -617,6 +668,7 @@
             const statusText = document.getElementById('shared-status-text');
             const leaveBtn = document.getElementById('btn-leave-session');
             const masterPanel = document.getElementById('master-control-panel');
+            const masterMainPanel = document.getElementById('master-main-panel');
             const controlsPanel = document.getElementById('controls-panel');
             const spectatorPanel = document.getElementById('spectator-view-panel');
 
@@ -626,7 +678,9 @@
                 statusText.innerText = 'Modo Compartilhado';
                 leaveBtn.classList.add('hidden');
                 masterPanel.classList.add('hidden');
-                controlsPanel.classList.remove('hidden');
+                masterMainPanel.classList.add('hidden');
+                controlsPanel.classList.remove('hidden'); // Fallback para single mode
+                controlsPanel.classList.add('flex');
                 spectatorPanel.classList.add('hidden');
                 document.getElementById('connection-indicator').className = "w-2 h-2 rounded-full bg-gray-500";
                 return;
@@ -640,19 +694,28 @@
                 roleBadge.innerText = '👑 Mesa Central';
                 statusText.innerText = 'Master Conectado';
                 masterPanel.classList.remove('hidden');
-                controlsPanel.classList.remove('hidden');
+                masterMainPanel.classList.remove('hidden');
+                masterMainPanel.classList.add('flex');
+                controlsPanel.classList.add('hidden');
+                controlsPanel.classList.remove('flex');
                 spectatorPanel.classList.add('hidden');
             } else if (role === 'judge') {
                 roleBadge.innerText = `⚖️ Juiz ${judgeNum}`;
                 statusText.innerText = `Juiz ${judgeNum} Conectado`;
                 masterPanel.classList.add('hidden');
+                masterMainPanel.classList.add('hidden');
+                masterMainPanel.classList.remove('flex');
                 controlsPanel.classList.remove('hidden');
+                controlsPanel.classList.add('flex');
                 spectatorPanel.classList.add('hidden');
             } else if (role === 'spectator') {
                 roleBadge.innerText = '🖥️ Telão (Espectador)';
                 statusText.innerText = 'Telão Conectado';
                 masterPanel.classList.add('hidden');
+                masterMainPanel.classList.add('hidden');
+                masterMainPanel.classList.remove('flex');
                 controlsPanel.classList.add('hidden');
+                controlsPanel.classList.remove('flex');
                 spectatorPanel.classList.remove('hidden');
             }
         }

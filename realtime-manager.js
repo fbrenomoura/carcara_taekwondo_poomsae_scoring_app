@@ -67,7 +67,8 @@ export class RealtimeManager {
                 roundActive: false,
                 penalties: 0,
                 timerStart: null,
-                timerPausedAt: null
+                timerPausedAt: null,
+                consolidated: false
             },
             judges: initialJudges,
             updatedAt: Date.now()
@@ -279,6 +280,7 @@ export class RealtimeManager {
             "sharedState.penalties": 0,
             "sharedState.timerStart": null,
             "sharedState.timerPausedAt": null,
+            "sharedState.consolidated": false,
             status: 'scoring'
         };
 
