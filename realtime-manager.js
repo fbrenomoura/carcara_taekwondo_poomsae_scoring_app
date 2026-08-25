@@ -64,7 +64,10 @@ export class RealtimeManager {
                 accDisplay: "4.0",
                 presDisplay: "6.0",
                 totalDisplay: "10.0",
-                roundActive: false
+                roundActive: false,
+                penalties: 0,
+                timerStart: null,
+                timerPausedAt: null
             },
             judges: initialJudges,
             updatedAt: Date.now()
@@ -273,6 +276,9 @@ export class RealtimeManager {
             "sharedState.accDisplay": "4.0",
             "sharedState.presDisplay": "6.0",
             "sharedState.totalDisplay": "10.0",
+            "sharedState.penalties": 0,
+            "sharedState.timerStart": null,
+            "sharedState.timerPausedAt": null,
             status: 'scoring'
         };
 
@@ -286,52 +292,90 @@ export class RealtimeManager {
         await updateDoc(sessionRef, updatePayload);
     }
 
-    // Master Calcular Nota Final Oficial (Com descarte de Maior/Menor para 5 ou 7 juízes)
-    calculateFinalScore(judgesData, numJudges) {
+    // Master Calcular Nota Final Oficial (Com descarte independente de Maior/Menor para 5 ou 7 juízes)
+    calculateFinalScore(judgesData, numJudges, penalties = 0) {
         const activeScores = [];
         Object.keys(judgesData).forEach(key => {
             const j = judgesData[key];
             if (j.scores) {
                 const accVal = j.scores.acc / 10;
                 const presVal = (j.scores.speed + j.scores.rhythm + j.scores.energy) / 10;
-                const total = accVal + presVal;
-                activeScores.push({ acc: accVal, pres: presVal, total: total });
+                activeScores.push({ acc: accVal, pres: presVal });
             }
         });
 
-        if (activeScores.length === 0) return { acc: "0.0", pres: "0.0", total: "0.0" };
+        if (activeScores.length === 0) return { acc: "0.00", pres: "0.00", total: "0.00" };
 
-        let totalAccSum = 0;
-        let totalPresSum = 0;
-        let totalSum = 0;
+        let accSum = 0;
+        let presSum = 0;
         let count = activeScores.length;
 
-        // Regra de descarte para 5 ou 7 juízes
+        // Regra de descarte independente para 5 ou 7 juízes
         if ((numJudges === 5 || numJudges === 7) && activeScores.length >= 3) {
-            // Ordenar por pontuação total
-            activeScores.sort((a, b) => a.total - b.total);
-            // Remover menor nota (primeira) e maior nota (última)
-            const trimmedScores = activeScores.slice(1, activeScores.length - 1);
-            count = trimmedScores.length;
+            const accList = activeScores.map(s => s.acc).sort((a, b) => a - b);
+            const presList = activeScores.map(s => s.pres).sort((a, b) => a - b);
             
-            trimmedScores.forEach(s => {
-                totalAccSum += s.acc;
-                totalPresSum += s.pres;
-                totalSum += s.total;
-            });
+            // Remover menor (primeiro) e maior (último)
+            const trimmedAcc = accList.slice(1, accList.length - 1);
+            const trimmedPres = presList.slice(1, presList.length - 1);
+            
+            count = trimmedAcc.length;
+            
+            accSum = trimmedAcc.reduce((sum, val) => sum + val, 0);
+            presSum = trimmedPres.reduce((sum, val) => sum + val, 0);
         } else {
-            activeScores.forEach(s => {
-                totalAccSum += s.acc;
-                totalPresSum += s.pres;
-                totalSum += s.total;
-            });
+            accSum = activeScores.reduce((sum, val) => sum + val.acc, 0);
+            presSum = activeScores.reduce((sum, val) => sum + val.pres, 0);
         }
 
+        const avgAcc = accSum / count;
+        const avgPres = presSum / count;
+        let totalScore = (avgAcc + avgPres) - (penalties * 0.3);
+        if (totalScore < 0) totalScore = 0;
+
         return {
-            acc: (totalAccSum / count).toFixed(2),
-            pres: (totalPresSum / count).toFixed(2),
-            total: (totalSum / count).toFixed(2)
+            acc: avgAcc.toFixed(2),
+            pres: avgPres.toFixed(2),
+            total: totalScore.toFixed(2)
         };
+    }
+
+    // Penalties and Timer (Master only)
+    async addPenalty(amount = 1) {
+        if (this.role !== 'master' || !this.sessionCode || !this.sessionData) return;
+        const currentPenalties = this.sessionData.sharedState.penalties || 0;
+        const sessionRef = doc(db, 'poomsae-sessions', this.sessionCode);
+        await updateDoc(sessionRef, { "sharedState.penalties": currentPenalties + amount });
+    }
+
+    async startTimer() {
+        if (this.role !== 'master' || !this.sessionCode || !this.sessionData) return;
+        const sessionRef = doc(db, 'poomsae-sessions', this.sessionCode);
+        let start = Date.now();
+        // If resuming from pause, backdate start time to simulate elapsed time
+        if (this.sessionData.sharedState.timerPausedAt && this.sessionData.sharedState.timerStart) {
+            const elapsedBeforePause = this.sessionData.sharedState.timerPausedAt - this.sessionData.sharedState.timerStart;
+            start = Date.now() - elapsedBeforePause;
+        }
+        await updateDoc(sessionRef, { 
+            "sharedState.timerStart": start,
+            "sharedState.timerPausedAt": null 
+        });
+    }
+
+    async pauseTimer() {
+        if (this.role !== 'master' || !this.sessionCode) return;
+        const sessionRef = doc(db, 'poomsae-sessions', this.sessionCode);
+        await updateDoc(sessionRef, { "sharedState.timerPausedAt": Date.now() });
+    }
+
+    async resetTimer() {
+        if (this.role !== 'master' || !this.sessionCode) return;
+        const sessionRef = doc(db, 'poomsae-sessions', this.sessionCode);
+        await updateDoc(sessionRef, { 
+            "sharedState.timerStart": null,
+            "sharedState.timerPausedAt": null 
+        });
     }
 
     // Sair / Desconectar
