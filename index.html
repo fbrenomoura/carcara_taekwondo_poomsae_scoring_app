@@ -354,15 +354,15 @@
         </div>
 
         <!-- PAINEL DE LEITURA SOMENTE TELÃO (Espectador) -->
-        <div id="spectator-view-panel" class="hidden flex-1 flex flex-col items-center justify-center px-8 z-20">
-            <h4 class="text-sm font-black text-purple-400 uppercase tracking-widest mb-4">Notas dos Juízes</h4>
-            <div id="spectator-judges-grid" class="flex gap-4 justify-center flex-wrap"></div>
+        <div id="spectator-view-panel" class="hidden flex-1 flex flex-col items-center justify-center px-8 z-20 pb-4">
+            <h4 class="text-base font-black text-purple-400 uppercase tracking-widest mb-3">Notas dos Juízes</h4>
+            <div id="spectator-judges-grid" class="flex gap-6 justify-center flex-wrap"></div>
         </div>
     </div>
 
     <!-- Módulo JS Realtime Firebase -->
     <script type="module">
-        import { realtimeManager } from './realtime-manager.js?v=9';
+        import { realtimeManager } from './realtime-manager.js?v=10';
 
         window.realtimeManager = realtimeManager;
         let selectedMasterJudges = 3;
@@ -519,9 +519,9 @@
                 }
                 
                 html += `
-                    <div class="glass-heavy px-4 py-2 rounded-xl flex flex-col items-center">
-                        <span class="text-[10px] text-gray-400 font-bold uppercase">Juiz ${i}</span>
-                        <span class="text-xl font-black font-mono ${hasSubmitted ? 'text-yellow-400' : 'text-gray-600'}">${total}</span>
+                    <div class="glass-heavy px-8 py-4 rounded-2xl flex flex-col items-center min-w-[100px] border border-white/10 shadow-lg">
+                        <span class="text-xs text-gray-400 font-black uppercase tracking-wider mb-1">Juiz ${i}</span>
+                        <span class="text-3xl md:text-4xl font-black font-mono ${hasSubmitted ? 'text-yellow-400' : 'text-gray-600'}">${total}</span>
                     </div>
                 `;
             }
